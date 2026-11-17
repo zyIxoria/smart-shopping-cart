@@ -1,0 +1,476 @@
+{
+  "metadata": {
+    "title": "Bằng chứng lưu vết bản tin Publish/Subscribe MQTT thời gian thực",
+    "recorded_at": "2026-11-17T16:49:35.555000+00:00",
+    "target_cart": "CART_002",
+    "total_messages": 21,
+    "environment": {
+      "tier": "Local Development & Experimental Validation Stack",
+      "mqtt_broker": "tools/dev_broker.py (Python Asyncio MQTT 3.1.1 Broker on 127.0.0.1:1883 TCP)",
+      "backend": "FastAPI 0.115 + Uvicorn on 127.0.0.1:8000 (SQLite data/smartcart.db)",
+      "simulator": "Smart Cart Multi-device Simulator on 127.0.0.1:8090",
+      "qos_level": 0,
+      "security_profile": "Development Mode (Plaintext MQTT over TCP 1883). Advanced TLS 8883 / HMAC-SHA256 verified in isolation test suite.",
+      "masking_policy": "All authentication bearer tokens, passwords, and derived HMAC keys are redacted as [REDACTED_SECRET]."
+    }
+  },
+  "records": [
+    {
+      "seq": 1,
+      "timestamp": "2026-11-17T16:49:24.969804Z",
+      "topic": "smartcart/CART_002/command",
+      "direction": "Backend -> Broker -> Cart",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "2c5d70ad-9189-4ae0-a296-5956fe40ac31",
+      "command_id": "cb600270-3deb-43d1-9381-319403ab1915",
+      "payload": {
+        "message_id": "2c5d70ad-9189-4ae0-a296-5956fe40ac31",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:24Z",
+        "data": {
+          "command_id": "cb600270-3deb-43d1-9381-319403ab1915",
+          "command_type": "START_SESSION",
+          "parameters": {
+            "session_id": 9
+          }
+        }
+      }
+    },
+    {
+      "seq": 2,
+      "timestamp": "2026-11-17T16:49:24.970431Z",
+      "topic": "smartcart/CART_002/ack",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "e09d76c2-9c88-4f23-a5db-64d5ddf301f8",
+      "command_id": "cb600270-3deb-43d1-9381-319403ab1915",
+      "payload": {
+        "message_id": "e09d76c2-9c88-4f23-a5db-64d5ddf301f8",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:24Z",
+        "data": {
+          "command_id": "cb600270-3deb-43d1-9381-319403ab1915",
+          "result": "OK",
+          "message": "Đã bắt đầu phiên"
+        }
+      }
+    },
+    {
+      "seq": 3,
+      "timestamp": "2026-11-17T16:49:24.970652Z",
+      "topic": "smartcart/CART_002/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "f3a48761-15d6-4e66-bafd-5ebe48ff492c",
+      "command_id": null,
+      "payload": {
+        "message_id": "f3a48761-15d6-4e66-bafd-5ebe48ff492c",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:24Z",
+        "data": {
+          "actual_weight": 0.0,
+          "battery_percent": 38.8,
+          "cart_status": "IN_USE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 4,
+      "timestamp": "2026-11-17T16:49:26.483249Z",
+      "topic": "smartcart/CART_002/scan",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "5db62544-e2c4-4fd5-b82a-35119cd87e3f",
+      "command_id": null,
+      "payload": {
+        "message_id": "5db62544-e2c4-4fd5-b82a-35119cd87e3f",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:26Z",
+        "data": {
+          "scan_id": "a12ffd2d-1764-4516-b8ea-3a1658d9c0ae",
+          "barcode": "8934588012341",
+          "action": "ADD"
+        }
+      }
+    },
+    {
+      "seq": 5,
+      "timestamp": "2026-11-17T16:49:26.483790Z",
+      "topic": "smartcart/CART_002/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "3fea5004-9a5d-4527-93ac-46040e883d5c",
+      "command_id": null,
+      "payload": {
+        "message_id": "3fea5004-9a5d-4527-93ac-46040e883d5c",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:26Z",
+        "data": {
+          "actual_weight": 354.7,
+          "battery_percent": 38.8,
+          "cart_status": "IN_USE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 6,
+      "timestamp": "2026-11-17T16:49:26.581075Z",
+      "topic": "smartcart/CART_002/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "015ae211-9f84-4619-b8cf-29d125c131de",
+      "command_id": null,
+      "payload": {
+        "message_id": "015ae211-9f84-4619-b8cf-29d125c131de",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:26Z",
+        "data": {
+          "actual_weight": 352.3,
+          "battery_percent": 38.8,
+          "cart_status": "IN_USE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 7,
+      "timestamp": "2026-11-17T16:49:26.916829Z",
+      "topic": "smartcart/CART_001/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_001",
+      "message_id": "2d8e9588-3a02-47b0-8afe-13dbd0f041d0",
+      "command_id": null,
+      "payload": {
+        "message_id": "2d8e9588-3a02-47b0-8afe-13dbd0f041d0",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:26Z",
+        "data": {
+          "actual_weight": 0.3,
+          "battery_percent": 38.8,
+          "cart_status": "AVAILABLE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 8,
+      "timestamp": "2026-11-17T16:49:27.024825Z",
+      "topic": "smartcart/CART_003/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_003",
+      "message_id": "78a3af02-db6e-4f5b-bb41-b869a547b1e7",
+      "command_id": null,
+      "payload": {
+        "message_id": "78a3af02-db6e-4f5b-bb41-b869a547b1e7",
+        "cart_id": "CART_003",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:27Z",
+        "data": {
+          "actual_weight": 0.0,
+          "battery_percent": 38.8,
+          "cart_status": "AVAILABLE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 9,
+      "timestamp": "2026-11-17T16:49:27.775905Z",
+      "topic": "smartcart/CART_001/heartbeat",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_001",
+      "message_id": "15349a06-3d75-4111-801e-bc621c7bf683",
+      "command_id": null,
+      "payload": {
+        "message_id": "15349a06-3d75-4111-801e-bc621c7bf683",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:27Z",
+        "data": {
+          "uptime_s": 33488,
+          "cart_status": "AVAILABLE"
+        }
+      }
+    },
+    {
+      "seq": 10,
+      "timestamp": "2026-11-17T16:49:27.988868Z",
+      "topic": "smartcart/CART_002/scan",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "24bc1b39-b24e-4579-8466-1549fa383263",
+      "command_id": null,
+      "payload": {
+        "message_id": "24bc1b39-b24e-4579-8466-1549fa383263",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:27Z",
+        "data": {
+          "scan_id": "9cbfec49-fe1b-4858-acab-7732dce8f0b2",
+          "barcode": "8935001700011",
+          "action": "ADD"
+        }
+      }
+    },
+    {
+      "seq": 11,
+      "timestamp": "2026-11-17T16:49:27.989492Z",
+      "topic": "smartcart/CART_002/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "707e4a00-1cb1-489f-9b59-8656851672c6",
+      "command_id": null,
+      "payload": {
+        "message_id": "707e4a00-1cb1-489f-9b59-8656851672c6",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:27Z",
+        "data": {
+          "actual_weight": 490.3,
+          "battery_percent": 38.8,
+          "cart_status": "IN_USE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 12,
+      "timestamp": "2026-11-17T16:49:27.996649Z",
+      "topic": "smartcart/CART_003/heartbeat",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_003",
+      "message_id": "aa1f718b-954a-4646-a581-68242053b5e5",
+      "command_id": null,
+      "payload": {
+        "message_id": "aa1f718b-954a-4646-a581-68242053b5e5",
+        "cart_id": "CART_003",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:27Z",
+        "data": {
+          "uptime_s": 33489,
+          "cart_status": "AVAILABLE"
+        }
+      }
+    },
+    {
+      "seq": 13,
+      "timestamp": "2026-11-17T16:49:28.225212Z",
+      "topic": "smartcart/CART_002/heartbeat",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "e976fd40-0cec-4a0a-9e82-a0f12e302a7c",
+      "command_id": null,
+      "payload": {
+        "message_id": "e976fd40-0cec-4a0a-9e82-a0f12e302a7c",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:28Z",
+        "data": {
+          "uptime_s": 33489,
+          "cart_status": "IN_USE"
+        }
+      }
+    },
+    {
+      "seq": 14,
+      "timestamp": "2026-11-17T16:49:29.495180Z",
+      "topic": "smartcart/CART_002/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "a84a43de-5f36-4224-9f94-30a2f73f0da5",
+      "command_id": null,
+      "payload": {
+        "message_id": "a84a43de-5f36-4224-9f94-30a2f73f0da5",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:29Z",
+        "data": {
+          "actual_weight": 795.3,
+          "battery_percent": 38.7,
+          "cart_status": "IN_USE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 15,
+      "timestamp": "2026-11-17T16:49:31.500699Z",
+      "topic": "smartcart/CART_002/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "58e5eeac-e2b3-42ab-830f-aea2368630b6",
+      "command_id": null,
+      "payload": {
+        "message_id": "58e5eeac-e2b3-42ab-830f-aea2368630b6",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:31Z",
+        "data": {
+          "actual_weight": 494.7,
+          "battery_percent": 38.7,
+          "cart_status": "IN_USE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    {
+      "seq": 16,
+      "timestamp": "2026-11-17T16:49:32.789695Z",
+      "topic": "smartcart/CART_001/heartbeat",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_001",
+      "message_id": "3144df6f-a950-486c-a905-446b54b9dd29",
+      "command_id": null,
+      "payload": {
+        "message_id": "3144df6f-a950-486c-a905-446b54b9dd29",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:32Z",
+        "data": {
+          "uptime_s": 33493,
+          "cart_status": "AVAILABLE"
+        }
+      }
+    },
+    {
+      "seq": 17,
+      "timestamp": "2026-11-17T16:49:33.002449Z",
+      "topic": "smartcart/CART_003/heartbeat",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_003",
+      "message_id": "53b3dfd6-6cbf-4e8f-9f74-f131c05f6e02",
+      "command_id": null,
+      "payload": {
+        "message_id": "53b3dfd6-6cbf-4e8f-9f74-f131c05f6e02",
+        "cart_id": "CART_003",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:33Z",
+        "data": {
+          "uptime_s": 33494,
+          "cart_status": "AVAILABLE"
+        }
+      }
+    },
+    {
+      "seq": 18,
+      "timestamp": "2026-11-17T16:49:33.230330Z",
+      "topic": "smartcart/CART_002/heartbeat",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "86103640-b4bd-4d4f-a2e4-9fb237df3d41",
+      "command_id": null,
+      "payload": {
+        "message_id": "86103640-b4bd-4d4f-a2e4-9fb237df3d41",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:33Z",
+        "data": {
+          "uptime_s": 33494,
+          "cart_status": "IN_USE"
+        }
+      }
+    },
+    {
+      "seq": 19,
+      "timestamp": "2026-11-17T16:49:33.523237Z",
+      "topic": "smartcart/CART_002/command",
+      "direction": "Backend -> Broker -> Cart",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "166daa86-14f4-4a28-93ab-7143b0ec6336",
+      "command_id": "4bf1ec7a-a949-4015-b4c2-c9c57875e73f",
+      "payload": {
+        "message_id": "166daa86-14f4-4a28-93ab-7143b0ec6336",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:33Z",
+        "data": {
+          "command_id": "4bf1ec7a-a949-4015-b4c2-c9c57875e73f",
+          "command_type": "END_SESSION",
+          "parameters": {
+            "session_id": 9
+          }
+        }
+      }
+    },
+    {
+      "seq": 20,
+      "timestamp": "2026-11-17T16:49:33.524297Z",
+      "topic": "smartcart/CART_002/ack",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "09117cfa-f30f-40fe-9231-de9647c0ef94",
+      "command_id": "4bf1ec7a-a949-4015-b4c2-c9c57875e73f",
+      "payload": {
+        "message_id": "09117cfa-f30f-40fe-9231-de9647c0ef94",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:33Z",
+        "data": {
+          "command_id": "4bf1ec7a-a949-4015-b4c2-c9c57875e73f",
+          "result": "OK",
+          "message": "Đã kết thúc phiên"
+        }
+      }
+    },
+    {
+      "seq": 21,
+      "timestamp": "2026-11-17T16:49:33.525120Z",
+      "topic": "smartcart/CART_002/telemetry",
+      "direction": "Cart -> Broker -> Backend",
+      "qos": 0,
+      "cart_id": "CART_002",
+      "message_id": "ebf475f3-769b-4499-b019-0dd92bceb0c8",
+      "command_id": null,
+      "payload": {
+        "message_id": "ebf475f3-769b-4499-b019-0dd92bceb0c8",
+        "cart_id": "CART_002",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T16:49:33Z",
+        "data": {
+          "actual_weight": 0.0,
+          "battery_percent": 38.7,
+          "cart_status": "AVAILABLE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    }
+  ]
+}
