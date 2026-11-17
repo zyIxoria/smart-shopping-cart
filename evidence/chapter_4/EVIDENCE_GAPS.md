@@ -1,0 +1,18 @@
+# BÁO CÁO CÁC KHOẢNG TRỐNG MINH CHỨNG (EVIDENCE GAPS)
+## Những nội dung chưa được kiểm chứng runtime hoặc mang tính chất mô phỏng
+
+> **Mục đích:** Giúp nhóm sinh viên nhận thức rõ ranh giới kỹ thuật hiện tại, không phát biểu quá mức trong báo cáo hoặc trả lời sai sự thật khi bảo vệ trước Hội đồng chấm đề tài.
+
+---
+
+### BẢNG TỔNG HỢP CÁC KHOẢNG TRỐNG VÀ CÁCH KHAI BÁO CHUẨN MỰC
+
+| Hạng mục kỹ thuật | Trạng thái kỹ thuật hiện tại | Rủi ro nếu nói quá | Cách khai báo chính xác và chuyên nghiệp khi bảo vệ |
+|---|---|---|---|
+| **1. Phần cứng vật lý (Mạch & Khung xe)** | **CHƯA CHẾ TẠO**. Không có breadboard, không có cảm biến vật lý thật, không có khung xe cơ khí. | Bị giảng viên yêu cầu mở camera xem mạch thật hoặc chất vấn về nhiễu cảm biến thực tế. | Tuyên bố: *"Đề tài được phát triển theo hướng **Mô hình Digital Twin & Phần cứng ảo hóa (Virtual Hardware Prototype)**. Nhóm tập trung giải quyết trọn vẹn kiến trúc phần mềm, giao thức IoT và thuật toán chống thất thoát."* |
+| **2. Giao tiếp Runtime của Wokwi ESP32** | **CODE VERIFIED**. Firmware C++ biên dịch thành công 100% bằng PlatformIO, nhưng chưa kích hoạt giao tiếp live qua Wokwi extension trong phiên chạy demo. | Giảng viên hỏi log thực tế của ESP32 gửi qua cổng Serial RFC2217. | Tuyên bố: *"Firmware C++ đã được module hóa và biên dịch thành công thành file nhị phân `.bin`/`.elf` sẵn sàng nạp vi điều khiển. Trong phiên demo, nhóm sử dụng Python Simulator để điều phối ổn định cả 3 xe cùng lúc."* |
+| **3. MQTT Broker (Mosquitto vs dev_broker)** | **CHẠY BẰNG `dev_broker.py`**. Mosquitto chỉ có file cấu hình trong Docker, không chạy trên Windows local. | Giảng viên yêu cầu xem file log Mosquitto hoặc cấu hình dịch vụ trên hệ điều hành. | Tuyên bố: *"Ở môi trường thử nghiệm cục bộ, nhóm sử dụng broker nội bộ viết bằng Python (`dev_broker.py`) để chạy độc lập không phụ thuộc phần mềm bên ngoài; cấu hình Mosquitto chính thức đã được đóng gói trong Docker Compose."* |
+| **4. Cơ sở dữ liệu PostgreSQL** | **CHƯA KẾT NỐI RUNTIME**. CSDL chạy 100% trên SQLite. PostgreSQL chỉ được viết lớp trừu tượng (Dual Engine) và test cú pháp. | Giảng viên yêu cầu mở pgAdmin hoặc kết nối psql xem dữ liệu thật. | Tuyên bố: *"Hệ thống hỗ trợ kiến trúc CSDL kép: SQLite phục vụ phát triển nhanh cục bộ và PostgreSQL cho môi trường Docker production. Dữ liệu thực nghiệm của Chương 4 được trích xuất trực tiếp từ SQLite."* |
+| **5. Bảo mật TLS 8883, ACL và chữ ký HMAC** | **CHỈ ĐẠT TRONG TEST SUITE**. Chế độ chạy demo local mặc định chạy cổng 1883 không mã hóa và không kiểm tra chữ ký. | Giảng viên bắt gói tin Wireshark thấy bản tin MQTT là dạng JSON rõ (plaintext). | Tuyên bố: *"Các cơ chế bảo mật nâng cao (mã hóa TLS 8883, phân quyền ACL, ký số HMAC-SHA256) đã được kiểm thử và vượt qua 10/10 bài test tự động. Trong buổi demo, nhóm xin phép tắt TLS để tiện quan sát luồng dữ liệu thô."* |
+| **6. Định vị xe trong siêu thị 3D** | **MÔ PHỎNG WAYPOINT**. Tọa độ `(x, y, z)` trong không gian 3D di chuyển theo các điểm nút định trước, xe không có cảm biến UWB hay GPS trong nhà. | Giảng viên hỏi: "Xe dùng công nghệ gì để biết nó đang ở quầy đồ uống?". | Tuyên bố: *"Hệ thống 3D Digital Twin sử dụng thuật toán điều hướng waypoint giả lập để trực quan hóa luồng di chuyển của khách; xe hiện tại chưa trang bị module định vị trong nhà (Indoor Positioning)."* |
+| **7. 16 bài kiểm thử bị SKIPPED** | **BLOCKED TRÊN WINDOWS**. 16 test bỏ qua do môi trường Windows thiếu `g++` trong PATH để biên dịch chéo C++ sang Python test harness. | Giảng viên hỏi: "Tại sao tỷ lệ pass chỉ là 142/158?". | Tuyên bố: *"16 test này kiểm tra việc biên dịch chéo C++ trên máy tính cá nhân. Việc này đã được thay thế hoàn toàn bằng việc PlatformIO Core 6.2.0 biên dịch firmware nhị phân thành công 100%."* |

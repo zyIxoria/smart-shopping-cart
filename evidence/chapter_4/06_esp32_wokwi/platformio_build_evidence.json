@@ -1,0 +1,58 @@
+{
+  "platformio_version": "PlatformIO Core 6.2.0",
+  "toolchain": "toolchain-xtensa-esp32 @ 8.4.0+2021r2-patch5",
+  "framework": "framework-arduinoespressif32 @ 4.20017.260907+sha.dcc1105b",
+  "esptool_version": "esptool.py v4.11.0",
+  "environments": {
+    "esp32dev_sim": {
+      "status": "SUCCESS",
+      "ram_usage_bytes": 28656,
+      "ram_total_bytes": 327680,
+      "ram_percent": 8.7,
+      "flash_usage_bytes": 425665,
+      "flash_total_bytes": 1310720,
+      "flash_percent": 32.5,
+      "target_bin": "firmware/.pio/build/esp32dev_sim/firmware.bin",
+      "target_elf": "firmware/.pio/build/esp32dev_sim/firmware.elf"
+    },
+    "esp32dev_sim_bridge": {
+      "status": "SUCCESS",
+      "ram_usage_bytes": 28664,
+      "ram_total_bytes": 327680,
+      "ram_percent": 8.7,
+      "flash_usage_bytes": 425861,
+      "flash_total_bytes": 1310720,
+      "flash_percent": 32.5,
+      "target_bin": "firmware/.pio/build/esp32dev_sim_bridge/firmware.bin",
+      "target_elf": "firmware/.pio/build/esp32dev_sim_bridge/firmware.elf"
+    },
+    "esp32dev_standalone": {
+      "status": "SUCCESS",
+      "ram_usage_bytes": 28824,
+      "ram_total_bytes": 327680,
+      "ram_percent": 8.8,
+      "flash_usage_bytes": 433977,
+      "flash_total_bytes": 1310720,
+      "flash_percent": 33.1,
+      "target_bin": "firmware/.pio/build/esp32dev_standalone/firmware.bin",
+      "target_elf": "firmware/.pio/build/esp32dev_standalone/firmware.elf"
+    }
+  },
+  "wokwi_diagram": {
+    "file": "diagram.json",
+    "parts_count": 9,
+    "parts_list": [
+      "wokwi-esp32-devkit-v1",
+      "board-ssd1306 (OLED 128x64)",
+      "wokwi-hx711 (Load cell 5kg)",
+      "wokwi-buzzer (Active buzzer)",
+      "wokwi-led (Green)",
+      "wokwi-led (Red)",
+      "wokwi-resistor (330 ohm x2)",
+      "wokwi-pushbutton (MODE)",
+      "wokwi-pushbutton (TARE)"
+    ],
+    "limitations": "Wokwi does not have a native GM65 UART barcode scanner part. Scanner input is fed via serial line or Python simulator."
+  },
+  "runtime_status": "FIRMWARE BINARY COMPILED (NOT VERIFIED LIVE ON HARDWARE/WOKWI EXTENSION)"
+}

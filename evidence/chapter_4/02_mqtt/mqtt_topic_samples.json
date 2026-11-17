@@ -1,0 +1,99 @@
+{
+  "protocol": "MQTT 3.1.1",
+  "broker_runtime": "tools/dev_broker.py on port 1883 (TCP)",
+  "qos": 0,
+  "topics": {
+    "scan": {
+      "topic": "smartcart/CART_001/scan",
+      "direction": "Cart (Simulator) -> Backend",
+      "sample": {
+        "message_id": "71b1cf7a-122d-4494-9daf-97d8d83250e0",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T13:21:07Z",
+        "data": {
+          "scan_id": "5d3c1f7a-0000-4000-8000-000000000001",
+          "barcode": "8934588012341",
+          "action": "ADD"
+        }
+      }
+    },
+    "telemetry": {
+      "topic": "smartcart/CART_001/telemetry",
+      "direction": "Cart (Simulator) -> Backend",
+      "sample": {
+        "message_id": "cd1f8cea-41c9-4145-af67-7f78f7b06da8",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T13:21:07Z",
+        "data": {
+          "actual_weight": 355.0,
+          "battery_percent": 80.5,
+          "cart_status": "IN_USE",
+          "wifi_status": "CONNECTED",
+          "mqtt_status": "CONNECTED"
+        }
+      }
+    },
+    "heartbeat": {
+      "topic": "smartcart/CART_001/heartbeat",
+      "direction": "Cart (Simulator) -> Backend",
+      "sample": {
+        "message_id": "512f9893-dd00-4766-a682-089f1e428c7c",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T13:21:07Z",
+        "data": {
+          "uptime_s": 2033,
+          "cart_status": "AVAILABLE"
+        }
+      }
+    },
+    "event": {
+      "topic": "smartcart/CART_001/event",
+      "direction": "Cart (Simulator) -> Backend",
+      "sample": {
+        "message_id": "9feff6ad-332d-4886-a698-05bd696aa4b7",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T13:21:07Z",
+        "data": {
+          "event_type": "UNKNOWN_BARCODE",
+          "description": "Mã vạch lạ: 999999"
+        }
+      }
+    },
+    "command": {
+      "topic": "smartcart/CART_001/command",
+      "direction": "Backend -> Cart (Simulator)",
+      "sample": {
+        "message_id": "931ea9d5-5304-4f01-a07f-d8f2528ab802",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T13:21:07Z",
+        "data": {
+          "command_id": "c8e10-cmd-001",
+          "command_type": "START_SESSION",
+          "parameters": {
+            "session_id": 7
+          }
+        }
+      }
+    },
+    "ack": {
+      "topic": "smartcart/CART_001/ack",
+      "direction": "Cart (Simulator) -> Backend",
+      "sample": {
+        "message_id": "eb1bec48-9aed-425b-ba6d-2014c441795c",
+        "cart_id": "CART_001",
+        "schema_version": 1,
+        "timestamp": "2026-11-17T13:21:07Z",
+        "data": {
+          "command_id": "c8e10-cmd-001",
+          "result": "OK",
+          "message": "Đã nhận START_SESSION"
+        }
+      }
+    }
+  }
+}

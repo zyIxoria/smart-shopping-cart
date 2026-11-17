@@ -1,0 +1,48 @@
+{
+  "health": {
+    "status": "ok",
+    "time": "2026-11-17T13:21:26Z",
+    "ws_port": 8000
+  },
+  "carts": [
+    {
+      "cart_id": "CART_001",
+      "name": "Xe đẩy 1",
+      "cart_status": "AVAILABLE",
+      "connection_status": "ONLINE",
+      "battery_percent": 80.4,
+      "current_weight": 0.0,
+      "last_seen": "2026-11-17T13:21:23Z",
+      "created_at": "2026-11-15T14:02:57Z",
+      "updated_at": "2026-11-17T13:21:23Z",
+      "active_alerts": [],
+      "session": null
+    },
+    {
+      "cart_id": "CART_002",
+      "name": "Xe đẩy 2",
+      "cart_status": "AVAILABLE",
+      "connection_status": "ONLINE",
+      "battery_percent": 80.4,
+      "current_weight": 0.0,
+      "last_seen": "2026-11-17T13:21:23Z",
+      "created_at": "2026-11-15T14:02:57Z",
+      "updated_at": "2026-11-17T13:21:23Z",
+      "active_alerts": [],
+      "session": null
+    },
+    {
+      "cart_id": "CART_003",
+      "name": "Xe đẩy 3",
+      "cart_status": "AVAILABLE",
+      "connection_status": "ONLINE",
+      "battery_percent": 80.4,
+      "current_weight": 0.0,
+      "last_seen": "2026-11-17T13:21:26Z",
+      "created_at": "2026-11-15T14:02:57Z",
+      "updated_at": "2026-11-17T13:21:26Z",
+      "active_alerts": [],
+      "session": null
+    }
+  ]
+}

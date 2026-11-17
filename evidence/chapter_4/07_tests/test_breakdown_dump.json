@@ -1,0 +1,105 @@
+{
+  "summary": {
+    "total_collected": 158,
+    "total_passed": 142,
+    "total_skipped": 16,
+    "total_failed": 0,
+    "pass_rate_executed": "100.0%",
+    "pass_rate_total": "89.87%"
+  },
+  "by_category": {
+    "unit_tests": {
+      "path": "tests/unit",
+      "total": 65,
+      "passed": 50,
+      "skipped": 15,
+      "failed": 0
+    },
+    "integration_tests": {
+      "path": "tests/integration",
+      "total": 69,
+      "passed": 68,
+      "skipped": 1,
+      "failed": 0
+    },
+    "e2e_tests": {
+      "path": "tests/e2e",
+      "total": 24,
+      "passed": 24,
+      "skipped": 0,
+      "failed": 0,
+      "submodules": {
+        "test_simulation_2d.py": 4,
+        "test_ui.py": 13,
+        "test_ui_auth.py": 3,
+        "test_ui_manage.py": 4
+      }
+    }
+  },
+  "skipped_tests_detail": [
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_firmware_messages_pass_backend_validation",
+      "reason": "Host Windows environment lacks g++ in PATH to compile C++ protocol_tool.exe"
+    },
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_firmware_message_content",
+      "reason": "Host Windows environment lacks g++ in PATH"
+    },
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_firmware_understands_backend_commands_and_acks_validly",
+      "reason": "Host Windows environment lacks g++ in PATH"
+    },
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_firmware_rejects_foreign_or_garbage_commands",
+      "reason": "Host Windows environment lacks g++ in PATH"
+    },
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_firmware_acks_failed_for_start_without_session_id",
+      "reason": "Host Windows environment lacks g++ in PATH"
+    },
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_cpp_hmac_matches_python_hmac",
+      "reason": "Host Windows environment lacks g++ in PATH"
+    },
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_python_verifies_firmware_signed_messages",
+      "reason": "Host Windows environment lacks g++ in PATH"
+    },
+    {
+      "test_name": "tests/unit/test_firmware_protocol.py::test_firmware_verifies_backend_signed_commands",
+      "reason": "Host Windows environment lacks g++ in PATH"
+    },
+    {
+      "test_name": "tests/unit/test_wokwi_package.py::test_main_cpp_syntax_sim_envs[standalone]",
+      "reason": "Checks syntax using host g++ -fsyntax-only (already verified via PlatformIO)"
+    },
+    {
+      "test_name": "tests/unit/test_wokwi_package.py::test_main_cpp_syntax_sim_envs[sim]",
+      "reason": "Checks syntax using host g++ -fsyntax-only (already verified via PlatformIO)"
+    },
+    {
+      "test_name": "tests/unit/test_wokwi_package.py::test_main_cpp_syntax_sim_envs[sim_bridge]",
+      "reason": "Checks syntax using host g++ -fsyntax-only (already verified via PlatformIO)"
+    },
+    {
+      "test_name": "tests/unit/test_wokwi_package.py::test_main_cpp_syntax_sim_envs[wokwi_online]",
+      "reason": "Checks syntax using host g++ -fsyntax-only (already verified via PlatformIO)"
+    },
+    {
+      "test_name": "tests/unit/test_wokwi_package.py::test_main_cpp_syntax_real_env_and_secure",
+      "reason": "Checks syntax using host g++ -fsyntax-only (already verified via PlatformIO)"
+    },
+    {
+      "test_name": "tests/unit/test_wokwi_package.py::test_wokwi_web_sketch_syntax[standalone]",
+      "reason": "Checks syntax using host g++ -fsyntax-only (already verified via PlatformIO)"
+    },
+    {
+      "test_name": "tests/unit/test_wokwi_package.py::test_wokwi_web_sketch_syntax[online]",
+      "reason": "Checks syntax using host g++ -fsyntax-only (already verified via PlatformIO)"
+    },
+    {
+      "test_name": "tests/integration/test_wokwi_bridge.py::test_bridge_end_to_end",
+      "reason": "Host Windows environment lacks g++ in PATH to compile FakeWokwi helper binary"
+    }
+  ]
+}

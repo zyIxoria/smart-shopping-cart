@@ -1,0 +1,90 @@
+[
+  {
+    "cart_id": "CART_001",
+    "connected": true,
+    "cart_status": "AVAILABLE",
+    "session_id": null,
+    "battery_percent": 80.5,
+    "true_weight": 0.0,
+    "weight_offset": 0.0,
+    "basket": [],
+    "sent": {
+      "heartbeat": 2033,
+      "telemetry": 1140,
+      "scan": 4,
+      "event": 0,
+      "ack": 7
+    },
+    "offline_queue_len": 0,
+    "log": [
+      "Quét ADD 8934673100019",
+      "Nhận END_SESSION -> AVAILABLE",
+      "Nhận START_SESSION #5 -> IN_USE",
+      "Quét ADD 8934588012341",
+      "Nhận END_SESSION -> AVAILABLE",
+      "MẤT KẾT NỐI (mô phỏng)",
+      "KẾT NỐI LẠI (mô phỏng)",
+      "Nhận END_SESSION -> AVAILABLE",
+      "KẾT NỐI LẠI (mô phỏng)",
+      "Nhận START_SESSION #7 -> IN_USE",
+      "Quét ADD 8934588012341",
+      "Nhận END_SESSION -> AVAILABLE"
+    ],
+    "heartbeat_s": 5.0,
+    "telemetry_s": 10.0
+  },
+  {
+    "cart_id": "CART_002",
+    "connected": false,
+    "cart_status": "AVAILABLE",
+    "session_id": null,
+    "battery_percent": 80.5,
+    "true_weight": 0.0,
+    "weight_offset": 0.0,
+    "basket": [],
+    "sent": {
+      "heartbeat": 2125,
+      "telemetry": 1191,
+      "scan": 4,
+      "event": 1,
+      "ack": 4
+    },
+    "offline_queue_len": 0,
+    "log": [
+      "Nhận END_SESSION -> AVAILABLE",
+      "Nhận END_SESSION -> AVAILABLE",
+      "Nhận START_SESSION #6 -> IN_USE",
+      "Quét ADD 8935001700011",
+      "Quét ADD UNKNOWN_999999",
+      "Quét REMOVE 8935001700011",
+      "Quét ADD 8934588012341",
+      "Nhận END_SESSION -> AVAILABLE"
+    ],
+    "heartbeat_s": 5.0,
+    "telemetry_s": 10.0
+  },
+  {
+    "cart_id": "CART_003",
+    "connected": true,
+    "cart_status": "AVAILABLE",
+    "session_id": null,
+    "battery_percent": 80.5,
+    "true_weight": 0.0,
+    "weight_offset": 0.0,
+    "basket": [],
+    "sent": {
+      "heartbeat": 2128,
+      "telemetry": 1182,
+      "scan": 0,
+      "event": 0,
+      "ack": 2
+    },
+    "offline_queue_len": 0,
+    "log": [
+      "Nhận END_SESSION -> AVAILABLE",
+      "Nhận END_SESSION -> AVAILABLE"
+    ],
+    "heartbeat_s": 5.0,
+    "telemetry_s": 10.0
+  }
+]
