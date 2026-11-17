@@ -1,4 +1,4 @@
-"""E2E tests (Playwright Chromium) cho màn hình Mô phỏng Siêu thị 2D (/simulation).
+"""E2E tests (Playwright Chromium) cho Bản đồ Siêu thị 2D tích hợp trực tiếp trong màn hình Quản trị (/admin).
 
 Chạy trên stack thật: Backend FastAPI + MQTT DevBroker + Simulator + ControlServer + WebSocket.
 Ảnh chụp giao diện thực tế lưu tại docs/2d-simulation/screenshots/.
@@ -43,7 +43,7 @@ def page(browser, stack):
 
 def sim2d_url(stack, sim_override=None):
     sim_base = sim_override or f"http://127.0.0.1:{stack.control.port}"
-    return f"{stack.api.base}/simulation?sim={sim_base}"
+    return f"{stack.api.base}/admin?sim={sim_base}"
 
 
 def shot(page, name):
@@ -51,20 +51,21 @@ def shot(page, name):
 
 
 def test_simulation_navigation_and_initial_map(page, stack):
-    """Truy cập từ Landing & Admin topbar -> hiển thị đủ 3 xe trên bản đồ 2D và fleet sidebar."""
+    """Truy cập /admin hiển thị đồng thời tổng quan quản trị, bản đồ 2D tích hợp và đủ 3 xe."""
     page.goto(page.base + "/")
-    expect(page.get_by_test_id("go-simulation")).to_be_visible()
-
-    page.goto(page.base + "/admin")
-    expect(page.get_by_test_id("nav-simulation")).to_be_visible()
+    expect(page.get_by_test_id("go-admin")).to_be_visible()
+    expect(page.get_by_test_id("go-simulation")).to_have_count(0)
 
     page.goto(sim2d_url(stack))
     expect(page.get_by_test_id("ws-status")).to_contain_text("Realtime", timeout=6000)
+    expect(page.get_by_test_id("simulation-section")).to_be_visible()
+    expect(page.get_by_test_id("stats")).to_be_visible()
     expect(page.get_by_test_id("sim-run-state")).to_contain_text("RUNNING")
 
     for cid in ("CART_001", "CART_002", "CART_003"):
         expect(page.get_by_test_id(f"fleet-item-{cid}")).to_be_visible()
         expect(page.get_by_test_id(f"map-cart-{cid}")).to_be_visible()
+        expect(page.get_by_test_id(f"admin-cart-{cid}")).to_be_visible()
 
     # Không tràn ngang trên desktop 1440px
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")

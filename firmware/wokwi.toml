@@ -1,6 +1,6 @@
 [wokwi]
 version = 1
-firmware = '.pio/build/esp32dev_sim/firmware.bin'
-elf = '.pio/build/esp32dev_sim/firmware.elf'
+firmware = '.pio/build/esp32dev_sim_bridge/firmware.bin'
+elf = '.pio/build/esp32dev_sim_bridge/firmware.elf'
 # Mở cổng Serial của mô phỏng ra TCP (RFC2217) để tools/wokwi_bridge.py nối vào (cách 3). Vô hại với các cách khác.
 rfc2217ServerPort = 4000

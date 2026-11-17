@@ -44,7 +44,11 @@ const options = {
 
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
-fs.copyFileSync(path.join(here, 'index.html'), path.join(dist, 'index.html'));
+const rawHtml = fs.readFileSync(path.join(here, 'index.html'), 'utf8');
+const versionedHtml = rawHtml
+  .replace('/assets/app.js', `/assets/app.js?v=${Date.now()}`)
+  .replace('/assets/app.css', `/assets/app.css?v=${Date.now()}`);
+fs.writeFileSync(path.join(dist, 'index.html'), versionedHtml, 'utf8');
 
 if (args.has('--watch')) {
   const ctx = await esbuild.context(options);

@@ -1,7 +1,12 @@
 """Các REST endpoint (prefix /api). Handler đồng bộ, chạy trong threadpool."""
 from __future__ import annotations
 
+import json
+import os
+import re
 import time
+import urllib.error
+import urllib.request
 
 from backend.api.registry import route
 from backend.auth import RateLimitError
@@ -287,3 +292,53 @@ def me(request, body):
 def logout(request, body):
     ctx_of(request).auth.revoke(principal_of(request))
     return {"ok": True}
+
+
+# ------------------------------------------------------------ simulator proxy (tích hợp UI 2D vào /admin)
+_SIM_ACTIONS = {"scan", "battery", "weight_offset", "connection", "drain_queue"}
+_SIM_CART_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+
+
+def _sim_req(method: str, path: str, payload: dict | None = None):
+    base = os.getenv("SIM_CONTROL_URL", "http://127.0.0.1:8090").rstrip("/")
+    tok = os.getenv("SIM_CONTROL_TOKEN", "")
+    headers = {"Accept": "application/json"}
+    data = None
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(payload).encode("utf-8")
+    if tok:
+        headers["Authorization"] = f"Bearer {tok}"
+    req = urllib.request.Request(f"{base}/sim{path}", data=data, headers=headers, method=method)
+    with urllib.request.urlopen(req, timeout=1.5) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+@route("GET", "/api/sim/status", "Trạng thái và danh mục của Simulator cục bộ (nếu đang chạy)", "System", auth="staff")
+def sim_status(request, body):
+    try:
+        carts = _sim_req("GET", "/carts")
+        catalog = _sim_req("GET", "/catalog")
+        return {"available": True, "carts": carts, "catalog": catalog}
+    except Exception:  # noqa: BLE001
+        return {"available": False, "carts": [], "catalog": [], "error": "Simulator chưa chạy (:8090)"}
+
+
+@route("POST", "/api/sim/carts/{cart_id}/{action}", "Chuyển tiếp thao tác tới Simulator cục bộ", "System", body=m.SimAction, errors=(400, 404, 502), auth="admin")
+def sim_action(request, body):
+    cid = request.path_params["cart_id"]
+    action = request.path_params["action"]
+    if not _SIM_CART_RE.match(cid) or action not in _SIM_ACTIONS:
+        raise bad_request("cart_id hoặc action simulator không hợp lệ")
+    try:
+        return _sim_req("POST", f"/carts/{cid}/{action}", body.model_dump())
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode("utf-8", errors="ignore")
+        try:
+            err = json.loads(raw)
+            msg = err.get("error") or raw
+        except Exception:  # noqa: BLE001
+            msg = raw or f"Lỗi Simulator {e.code}"
+        raise ApiError(e.code, "SIM_ERROR", str(msg)) from None
+    except Exception as e:  # noqa: BLE001
+        raise ApiError(502, "SIM_OFFLINE", f"Không kết nối được Simulator: {e}") from None

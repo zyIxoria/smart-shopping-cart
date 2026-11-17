@@ -4,6 +4,7 @@ import { ConnBadge, Empty, Loading, StatusBadge, Toasts, WsIndicator } from '../
 import { weight } from '../common/format.js';
 import { Link } from '../router.jsx';
 import { useStore } from '../state/store.jsx';
+import SupermarketSimulation from '../simulation/SupermarketSimulation.jsx';
 
 const RESULT = {
   sent: ['ok', 'Đã gửi lệnh quét lên hệ thống (MQTT)'],
@@ -130,28 +131,59 @@ export default function SimulatorPage() {
   return (
     <div className="shell simulator">
       <header className="topbar">
-        <Link to="/" className="brand"><span className="logo">🛒</span> Smart Cart <span className="tag">Simulator phần cứng</span></Link>
+        <Link to="/" className="brand"><span className="logo">🛒</span> Smart Cart <span className="tag">Simulator & Digital Twin</span></Link>
+        <nav className="nav" aria-label="Điều hướng mô phỏng">
+          <Link to="/simulation" className="nav-link" data-testid="nav-to-simulation">🎮 Siêu thị 3D Digital Twin</Link>
+          <a href="#sim2d-section" className="nav-link on">Không gian 3D</a>
+          <a href="#hardware-section" className="nav-link">Thiết bị phần cứng</a>
+        </nav>
         <div className="topbar-right">
           <WsIndicator />
-          <Link to="/simulation" className="link-muted" data-testid="nav-simulation">Mô phỏng 2D →</Link>
+          <Link to="/simulation" className="btn btn-primary btn-small" style={{ marginRight: 6 }}>🎮 Mở Siêu thị 3D</Link>
           <Link to="/admin" className="link-muted">Quản trị →</Link>
           <Link to="/customer" className="link-muted">Khách hàng →</Link>
         </div>
       </header>
       <main className="container wide">
-        <h1 className="page-title">Mô phỏng thiết bị IoT trên xe đẩy</h1>
-        <p className="muted lead">Mỗi thẻ là một xe giả lập (thay cho ESP32 + máy quét + cân + pin). Thao tác ở đây được gửi lên hệ thống qua MQTT giống phần cứng thật; mở <Link to="/customer">giao diện khách</Link> hoặc <Link to="/admin">quản trị</Link> ở tab khác để xem kết quả theo thời gian thực.</p>
-        {error && (
-          <div className="banner banner-danger" role="alert" data-testid="sim-error">
-            <span>⚠️ {error} ({simApi.base}). Hãy chạy <code>python -m simulator.main</code> (hoặc <code>scripts/run_local.sh</code>).</span>
-            <button className="btn btn-small" onClick={poll}>Thử lại</button>
+        <div className="card" style={{ marginBottom: 20, background: 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)', border: '1px solid #bbf7d0', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, color: '#166534', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>🛒</span> Mô hình Siêu thị 3D Interactive Digital Twin
+            </h3>
+            <p style={{ margin: '4px 0 0', color: '#15803d', fontSize: '0.92rem' }}>
+              Mô hình siêu thị 3D isometric tương tác: 8 dãy kệ hàng, 7 khu vực (Thực phẩm, Đồ uống, Gia dụng, Chăm sóc cá nhân, Quầy thanh toán), xe di chuyển realtime và kịch bản IoT.
+            </p>
           </div>
-        )}
-        {!carts ? (error ? <Empty icon="🔌" title="Chưa kết nối được Simulator" hint="Simulator chạy tách riêng với Backend." /> : <Loading text="Đang kết nối Simulator…" />) : (
-          <div className="grid device-grid" data-testid="device-grid">
-            {carts.map((c) => <Device key={c.cart_id} c={c} catalog={catalog} backend={state.carts[c.cart_id]} onAct={poll} />)}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link to="/simulation" className="btn btn-primary btn-small" data-testid="btn-open-simulation-page">Xem trang 3D toàn màn hình →</Link>
           </div>
-        )}
+        </div>
+
+        <section id="sim2d-section" style={{ marginBottom: 32 }}>
+          <SupermarketSimulation />
+        </section>
+
+        <section id="hardware-section" style={{ borderTop: '2px dashed var(--border)', paddingTop: 24, marginTop: 12 }}>
+          <div className="page-head">
+            <div>
+              <h2 className="page-title" style={{ fontSize: '1.25rem', margin: 0 }}>Mô phỏng Thiết bị IoT trên xe đẩy (Màn hình LCD / Cân / Pin)</h2>
+              <p className="muted lead" style={{ marginTop: 4, marginBottom: 16 }}>
+                Mỗi thẻ là một xe giả lập (thay cho ESP32 + máy quét + cân + pin). Thao tác ở đây được gửi lên hệ thống qua MQTT giống phần cứng thật; mở <Link to="/customer">giao diện khách</Link> hoặc <Link to="/admin">quản trị</Link> ở tab khác để xem kết quả theo thời gian thực.
+              </p>
+            </div>
+          </div>
+          {error && (
+            <div className="banner banner-danger" role="alert" data-testid="sim-error">
+              <span>⚠️ {error} ({simApi.base}). Hãy chạy <code>python -m simulator.main</code> (hoặc <code>scripts/run_local.sh</code>).</span>
+              <button className="btn btn-small" onClick={poll}>Thử lại</button>
+            </div>
+          )}
+          {!carts ? (error ? <Empty icon="🔌" title="Chưa kết nối được Simulator" hint="Simulator chạy tách riêng với Backend." /> : <Loading text="Đang kết nối Simulator…" />) : (
+            <div className="grid device-grid" data-testid="device-grid">
+              {carts.map((c) => <Device key={c.cart_id} c={c} catalog={catalog} backend={state.carts[c.cart_id]} onAct={poll} />)}
+            </div>
+          )}
+        </section>
       </main>
       <Toasts scope="admin" />
     </div>

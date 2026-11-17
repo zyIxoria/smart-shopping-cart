@@ -1,4 +1,4 @@
-# Chạy CHỈ Backend (+ giao diện) nối vào MQTT broker CÔNG CỘNG để firmware trong Wokwi liên kết được (Windows PowerShell).
+﻿# Chạy CHỈ Backend (+ giao diện) nối vào MQTT broker CÔNG CỘNG để firmware trong Wokwi liên kết được (Windows PowerShell).
 # Cấu hình (broker, gốc topic, mã xe) đọc từ firmware\include\wokwi_online.h nên luôn khớp với firmware.
 # Chạy từ thư mục gốc dự án:   powershell -ExecutionPolicy Bypass -File scripts\run_online_demo.ps1
 $ErrorActionPreference = "Stop"

@@ -228,33 +228,30 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
 .text-ok { color: var(--ok); }
 .text-danger { color: var(--danger); }
 
-/* ---- Mô phỏng siêu thị 2D (Digital Twin) ---- */
-.sim2d-shell { min-height: 100vh; display: flex; flex-direction: column; }
+/* ---- Mô phỏng siêu thị 2D tích hợp trong /admin ---- */
+.sim2d-embedded { margin: 14px 0 18px; max-width: 100%; }
 .sim2d-toolbar {
-  margin: 14px 20px 0; padding: 12px 16px;
-  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  margin: 0; padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
 }
 .sim2d-toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.sim2d-kpis { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: .88rem; }
-.sim2d-kpi { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; }
+.sim2d-kpi { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font-size: .86rem; }
 .sim2d-global-btns { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.sim2d-alerts-wrap { margin: 10px 20px 0; }
-.sim2d-alerts-wrap:empty { display: none; }
 
 .sim2d-cockpit {
   display: grid;
-  grid-template-columns: 245px minmax(520px, 1fr) 335px;
+  grid-template-columns: 230px minmax(0, 1fr) 320px;
   gap: 14px;
-  padding: 12px 20px;
+  padding: 12px 0;
   align-items: start;
 }
 .sim2d-card-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   margin-bottom: 10px;
 }
-.sim2d-card-head h2 { margin: 0; font-size: 1rem; }
+.sim2d-card-head h3 { margin: 0; font-size: .98rem; }
 
-.sim2d-fleet { padding: 14px; }
+.sim2d-fleet { padding: 14px; min-width: 0; }
 .sim2d-fleet-list { display: flex; flex-direction: column; gap: 8px; }
 .sim2d-fleet-item {
   width: 100%; text-align: left; background: #fff; border: 1px solid var(--line);
@@ -277,13 +274,13 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
 .sim2d-zoom-ctrls { display: flex; align-items: center; gap: 6px; }
 .sim2d-svg-viewport {
   border: 1px solid var(--line); border-radius: 10px; background: #ffffff;
-  overflow: hidden; min-height: 460px; user-select: none;
+  overflow: hidden; min-height: 220px; user-select: none;
 }
-.sim2d-svg { display: block; width: 100%; height: auto; max-height: 560px; }
+.sim2d-svg { display: block; width: 100%; height: auto; max-height: 540px; }
 .sim2d-map-hint { line-height: 1.4; }
 
 .sim2d-right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.sim2d-inspector, .sim2d-controls { padding: 14px; }
+.sim2d-inspector, .sim2d-controls { padding: 14px; min-width: 0; }
 .sim2d-kv-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px;
   padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
@@ -303,17 +300,15 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
 .sim2d-ctrl-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .sim2d-ctrl-group:first-of-type { margin-top: 4px; padding-top: 6px; border-top: 0; }
 .sim2d-ctrl-group > label { display: block; margin-bottom: 6px; font-weight: 600; }
-.sim2d-ctrl-row { display: flex; align-items: center; gap: 6px; }
+.sim2d-ctrl-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .sim2d-ctrl-row select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: .86rem; background: #fff; }
 .sim2d-btn-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 
-.sim2d-eventlog { margin: 0 20px 20px; padding: 14px; }
-.sim2d-log-scroll { max-height: 220px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; }
+.sim2d-eventlog { margin: 0; padding: 14px; }
+.sim2d-log-scroll { max-height: 220px; max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
 .sim2d-log-table { margin: 0; }
 .sim2d-log-table th, .sim2d-log-table td { padding: 6px 10px; font-size: .84rem; }
 
 @media (max-width: 1120px) {
-  .sim2d-cockpit { grid-template-columns: 1fr; }
-  .sim2d-toolbar, .sim2d-alerts-wrap, .sim2d-eventlog { margin-left: 12px; margin-right: 12px; }
-  .sim2d-cockpit { padding: 12px; }
+  .sim2d-cockpit { grid-template-columns: minmax(0, 1fr); }
 }

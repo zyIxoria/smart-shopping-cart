@@ -267,8 +267,8 @@ def register_cart(api: str, cart_id: str, token: str | None = None) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--cart-id", default="WK_BRIDGE", help="mã xe hiển thị ở hệ thống (mặc định WK_BRIDGE)")
-    ap.add_argument("--firmware-cart-id", default="CART_DEMO", help="CART_ID bên trong firmware (chế độ standalone: CART_DEMO)")
+    ap.add_argument("--cart-id", default=os.getenv("WOKWI_CART_ID", "CART_001"), help="mã xe hiển thị ở hệ thống (mặc định CART_001)")
+    ap.add_argument("--firmware-cart-id", default=os.getenv("WOKWI_FIRMWARE_CART_ID", "CART_001"), help="CART_ID bên trong firmware (mặc định CART_001)")
     ap.add_argument("--wokwi-host", default="localhost")
     ap.add_argument("--wokwi-port", type=int, default=int(os.getenv("WOKWI_SERIAL_PORT", "4000")))
     ap.add_argument("--mqtt-host", default=os.getenv("MQTT_HOST", "localhost"))

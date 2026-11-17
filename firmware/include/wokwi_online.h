@@ -11,4 +11,4 @@
 #define MQTT_HOST        "broker.hivemq.com"      // hoặc broker.emqx.io / test.mosquitto.org (cổng 1883, không TLS)
 #define MQTT_PORT        1883
 #define MQTT_TOPIC_ROOT  "smartcart-msgozlq5o6"
-#define CART_ID          "WK_yz1mhe"
+#define CART_ID          "CART_001"

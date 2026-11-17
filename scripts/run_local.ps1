@@ -115,17 +115,23 @@ try {
     }
     if (-not $ready) { throw "Backend không phản hồi /api/health sau 15 giây." }
 
-    Write-Host "[3/3] Khởi động Python Simulator 3 xe (cổng 8090)..." -ForegroundColor Yellow
+    Write-Host "[3/4] Khởi động Python Simulator 3 xe (cổng 8090)..." -ForegroundColor Yellow
     $simProc = Start-Process python -ArgumentList "-m simulator.main --no-cli" -PassThru -NoNewWindow
     $pids += $simProc.Id
     Start-Sleep -Seconds 1
     if ($simProc.HasExited) { throw "Simulator khởi động thất bại (ExitCode: $($simProc.ExitCode))." }
 
+    Write-Host "[4/4] Khởi động Cầu nối Wokwi Bridge (cổng 4000 -> MQTT xe CART_001)..." -ForegroundColor Yellow
+    $bridgeProc = Start-Process python -ArgumentList "-m tools.wokwi_bridge --cart-id CART_001 --firmware-cart-id CART_001" -PassThru -NoNewWindow
+    $pids += $bridgeProc.Id
+
     Write-Host "`n----------------------------------------------------------" -ForegroundColor Green
     Write-Host "HỆ THỐNG ĐÃ SẴN SÀNG:" -ForegroundColor Green
     Write-Host "  • Giao diện Web Khách Hàng: http://localhost:8000/customer" -ForegroundColor White
     Write-Host "  • Giao diện Quản Trị:       http://localhost:8000/admin" -ForegroundColor White
+    Write-Host "  • Bản đồ Siêu thị 2D:       http://localhost:8000/simulation" -ForegroundColor White
     Write-Host "  • Simulator Phần Cứng Web:  http://localhost:8000/simulator" -ForegroundColor White
+    Write-Host "  • Wokwi ESP32 Bridge:       Cổng 4000 sẵn sàng nối xe CART_001" -ForegroundColor Yellow
     Write-Host "  • Swagger API Docs:         http://localhost:8000/docs" -ForegroundColor White
     Write-Host "  • ReDoc API Docs:           http://localhost:8000/redoc" -ForegroundColor White
     Write-Host "  • WebSocket Realtime:       ws://localhost:8000/ws" -ForegroundColor White
@@ -135,7 +141,7 @@ try {
     Write-Host "Nhấn Ctrl+C (hoặc đóng cửa sổ) để dừng toàn bộ hệ thống...`n" -ForegroundColor Gray
 
     while ($true) {
-        foreach ($proc in @($brokerProc, $backendProc, $simProc)) {
+        foreach ($proc in @($brokerProc, $backendProc, $simProc, $bridgeProc)) {
             if ($proc.HasExited) {
                 Write-Warning "Tiến trình $($proc.Id) đã dừng đột ngột (ExitCode: $($proc.ExitCode))."
                 throw "Tiến trình con bị dừng."

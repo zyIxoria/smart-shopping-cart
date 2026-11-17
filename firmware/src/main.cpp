@@ -35,7 +35,9 @@
 #endif
 // Lưu ý: tên "cart_config.h" (không phải "config.h") vì framework ESP32 có sẵn nhiều file config.h khác và trình biên dịch sẽ nhặt nhầm.
 #if STANDALONE_MODE
-#define CART_ID "CART_DEMO"
+#ifndef CART_ID
+#define CART_ID "CART_001"
+#endif
 #define WIFI_SSID ""
 #define WIFI_PASS ""
 #define MQTT_HOST "127.0.0.1"
@@ -552,7 +554,9 @@ static void display_update(uint32_t now) {
   oled.setCursor(0, 0);
   oled.printf("%s  %s", CART_ID, status_name(logic.status()));
   oled.setCursor(0, 11);
-#if STANDALONE_MODE
+#if SERIAL_BRIDGE
+  oled.printf("BRIDGE (MQTT) hang:%d", local_items);
+#elif STANDALONE_MODE
   oled.printf("DOC LAP  hang:%d", local_items);
 #else
   oled.printf("WiFi:%s MQTT:%s", wifi_ok() ? "OK" : "--", mqtt.connected() ? "OK" : "--");

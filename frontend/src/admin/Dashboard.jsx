@@ -6,6 +6,7 @@ import { ago, vnd, weight } from '../common/format.js';
 import { Link } from '../router.jsx';
 import { useNow, useStore } from '../state/store.jsx';
 import AdminLayout from './AdminLayout.jsx';
+import SupermarketSimulation from '../simulation/SupermarketSimulation.jsx';
 
 const FILTERS = [
   { id: 'ALL', label: 'Tất cả', test: () => true },
@@ -95,6 +96,8 @@ export default function Dashboard() {
               </>
             )}
           </section>
+
+          <SupermarketSimulation />
 
           <div className="filters" role="tablist" aria-label="Lọc theo trạng thái">
             {FILTERS.map((f) => (

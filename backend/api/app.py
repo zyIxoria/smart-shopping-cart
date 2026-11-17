@@ -168,13 +168,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         rel = request.path_params.get("path", "")
         if rel.startswith("api/"):
             return _err(404, "NOT_FOUND", f"Không có endpoint {request.url.path}")
+        no_cache = {"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache"}
         if dist.is_dir():
             target = (dist / rel).resolve()
             if rel and target.is_file() and dist.resolve() in target.parents:
-                return FileResponse(target, media_type=mimetypes.guess_type(str(target))[0])
+                return FileResponse(target, media_type=mimetypes.guess_type(str(target))[0], headers=no_cache)
             index = dist / "index.html"
             if index.is_file():
-                return FileResponse(index)
+                return FileResponse(index, headers=no_cache)
         return JSONResponse({"service": "Smart Shopping Cart API", "docs": "/docs", "frontend": "chưa build (cd frontend && npm run build)"})
 
     async def api_not_found(request, exc=None):

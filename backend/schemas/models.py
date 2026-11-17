@@ -1,7 +1,7 @@
 """Pydantic schemas (request body + mô tả OpenAPI)."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SessionCreate(BaseModel):
@@ -134,3 +134,7 @@ class Me(BaseModel):
 class SessionStarted(Session):
     token: str = Field("", description="Token của khách cho phiên này (Authorization: Bearer ...); rỗng nếu AUTH tắt")
     token_expires_in: int = 0
+
+
+class SimAction(BaseModel):
+    model_config = ConfigDict(extra="allow")
