@@ -201,7 +201,7 @@ export default function SupermarketSimulation() {
   const moveCartToZoneRef = useRef(moveCartToZone);
   moveCartToZoneRef.current = moveCartToZone;
 
-  // Xử lý chuỗi sự kiện khi xe đến điểm đích của chặng (quầy thanh toán -> lối ra -> ngắt mạng offline -> quay về bãi giữ xe)
+  // Xử lý chuỗi sự kiện khi xe đến điểm đích của chặng (quầy thanh toán -> lối ra -> quay về bãi xe sẵn sàng đón khách mới)
   const handleDestinationReached = useCallback((cid, arrivedZone) => {
     const stage = checkoutStageRef.current[cid];
     if (!stage) return;
@@ -215,20 +215,18 @@ export default function SupermarketSimulation() {
         toast('ok', `Xe ${cid} thanh toán xong, đang di chuyển ra Lối ra...`, { scope: 'admin' });
       }, 1200);
     } else if (stage === 'to_exit') {
-      // 2. Đã tới Lối ra -> chuyển ngay sang OFFLINE, dừng 1.2s rồi tự động trở về Bãi giữ xe
+      // 2. Đã tới Lối ra -> bàn giao hoàn tất, dừng 1.2s rồi tự động trở về Bãi giữ xe
       checkoutStageRef.current[cid] = 'waiting_at_exit';
-      setOnlineCarts((prev) => ({ ...prev, [cid]: false }));
-      simApi.connection(cid, false).catch(() => {});
-      toast('warn', `Xe ${cid} đã đến Lối ra · Chuyển sang OFFLINE · Tự động trở về bãi giữ xe...`, { scope: 'admin' });
+      toast('info', `Xe ${cid} đã qua Lối ra · Tự động trở về bãi giữ xe đón khách mới...`, { scope: 'admin' });
       setTimeout(() => {
         checkoutStageRef.current[cid] = 'to_bay';
         moveCartToZoneRef.current(cid, 'entrance', true);
       }, 1200);
     } else if (stage === 'to_bay') {
-      // 3. Đã về tới Bãi giữ xe -> đỗ vào slot ban đầu, xoá stage và giữ trạng thái OFFLINE
+      // 3. Đã về tới Bãi giữ xe -> đỗ vào slot ban đầu, xe ở trạng thái Sẵn sàng (ONLINE, giỏ trống đón khách mới)
       delete checkoutStageRef.current[cid];
       setCheckoutFlags((prev) => ({ ...prev, [cid]: false }));
-      setOnlineCarts((prev) => ({ ...prev, [cid]: false }));
+      setOnlineCarts((prev) => ({ ...prev, [cid]: true }));
       const cIdx = mergedCarts.findIndex((c) => c.cart_id === cid);
       const parkSlot = initialSlotForIndex(cIdx >= 0 ? cIdx : 0);
       positionsRef.current = {
@@ -236,7 +234,7 @@ export default function SupermarketSimulation() {
         [cid]: parkSlot,
       };
       setPositions({ ...positionsRef.current });
-      toast('ok', `Xe ${cid} đã về bãi đỗ an toàn (trạng thái OFFLINE), sẵn sàng cho lượt khách tiếp theo`, { scope: 'admin' });
+      toast('ok', `Xe ${cid} đã về bãi đỗ (Giỏ trống · Sẵn sàng đón khách mới)`, { scope: 'admin' });
     }
   }, [mergedCarts, toast]);
 
@@ -690,8 +688,21 @@ export default function SupermarketSimulation() {
                 <h3 className="mono" style={{ margin: 0, fontSize: '1.08rem' }} data-testid="inspector-cart-id">{selectedId}</h3>
                 <div className="muted small">Khu vực 2D: <strong>{selZone?.label || 'Lối vào'}</strong></div>
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <ConnBadge status={selConn} />
+                {!isCartOnline(selectedId) && writable && (
+                  <button
+                    type="button"
+                    className="btn btn-small btn-ok"
+                    style={{ fontSize: '0.74rem', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => handleConnection(true)}
+                    disabled={Boolean(busyAction)}
+                    data-testid="btn-quick-reconnect"
+                    title="Kết nối lại xe với Server (MQTT + Backend)"
+                  >
+                    🔌 Kết nối lại
+                  </button>
+                )}
                 <Badge tone={CART_STATUS[selStatus]?.tone}>{CART_STATUS[selStatus]?.label || selStatus}</Badge>
               </div>
             </div>
@@ -785,8 +796,21 @@ export default function SupermarketSimulation() {
                 </button>
               </div>
               {!isCartOnline(selectedId) && (
-                <div className="small muted" style={{ marginTop: 4, color: '#f59e0b', fontSize: '0.78rem' }}>
-                  ⚠️ Xe {selectedId} đang <b>OFFLINE</b> tại bãi xe. Bấm <b>Bắt đầu phiên</b> bên dưới để bật xe và di chuyển.
+                <div className="small" style={{ marginTop: 6, padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: 6, color: '#f59e0b', fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                  <span>⚠️ Xe {selectedId} đang <b>OFFLINE</b> tại bãi xe. Bấm <b>Bắt đầu phiên</b> hoặc kết nối lại để sử dụng.</span>
+                  {writable && (
+                    <button
+                      type="button"
+                      className="btn btn-small btn-ok"
+                      style={{ padding: '2px 8px', fontSize: '0.74rem' }}
+                      onClick={() => handleConnection(true)}
+                      disabled={Boolean(busyAction)}
+                      data-testid="btn-banner-reconnect"
+                      title="Kết nối lại xe ngay với Server"
+                    >
+                      🔌 Kết nối server ngay
+                    </button>
+                  )}
                 </div>
               )}
             </div>
