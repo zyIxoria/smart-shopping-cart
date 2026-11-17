@@ -1,0 +1,122 @@
+[
+  {
+    "barcode": "8934588012341",
+    "name": "Coca Cola lon 330ml",
+    "price": 12000,
+    "unit_weight": 355,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8934588012358",
+    "name": "Pepsi lon 330ml",
+    "price": 11000,
+    "unit_weight": 355,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8935001700011",
+    "name": "Oreo vị vani 137g",
+    "price": 15000,
+    "unit_weight": 137,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8934563138165",
+    "name": "Mì Hảo Hảo tôm chua cay 75g",
+    "price": 4500,
+    "unit_weight": 75,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8934673100019",
+    "name": "Sữa tươi Vinamilk 1L",
+    "price": 32000,
+    "unit_weight": 1030,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8935024140015",
+    "name": "Nước suối Aquafina 500ml",
+    "price": 6000,
+    "unit_weight": 510,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8936036020014",
+    "name": "Bánh Chocopie hộp 6 cái",
+    "price": 38000,
+    "unit_weight": 198,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8934804020017",
+    "name": "Snack Lay's vị tự nhiên 54g",
+    "price": 12000,
+    "unit_weight": 54,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8934822000028",
+    "name": "Dầu ăn Simply 1L",
+    "price": 62000,
+    "unit_weight": 920,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8935049500018",
+    "name": "Nước mắm Nam Ngư 500ml",
+    "price": 34000,
+    "unit_weight": 620,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8934588063015",
+    "name": "Trà xanh 0 độ 455ml",
+    "price": 10000,
+    "unit_weight": 470,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8936079120018",
+    "name": "Gạo ST25 túi 1kg",
+    "price": 28000,
+    "unit_weight": 1000,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8935005801012",
+    "name": "Kem đánh răng P/S 180g",
+    "price": 29000,
+    "unit_weight": 200,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8934868150014",
+    "name": "Bột giặt Omo 800g",
+    "price": 56000,
+    "unit_weight": 810,
+    "image": "",
+    "active": true
+  },
+  {
+    "barcode": "8935039500123",
+    "name": "Khăn giấy Pulppy 10 gói",
+    "price": 25000,
+    "unit_weight": 480,
+    "image": "",
+    "active": true
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "cart_id": "CART_001",
+    "name": "Xe đẩy 1"
+  },
+  {
+    "cart_id": "CART_002",
+    "name": "Xe đẩy 2"
+  },
+  {
+    "cart_id": "CART_003",
+    "name": "Xe đẩy 3"
+  }
+]

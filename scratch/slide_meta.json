@@ -1,0 +1,335 @@
+[
+  {
+    "slide_index": 1,
+    "notes": "1. TỔNG QUAN SLIDE:\nSlide mở đầu giới thiệu đề tài 'Hệ thống Xe đẩy hàng thông minh ứng dụng IoT (Smart Shopping Cart)' và tuyên bố ranh giới kỹ thuật trung thực: đây là hệ thống IoT mô phỏng phần mềm và firmware Wokwi, không sử dụng phần cứng cảm biến vật lý.\n\n2. CÔNG NGHỆ CHÍNH:\nBackend sử dụng FastAPI + Pydantic v2; CSDL hỗ trợ Dual-Engine (PostgreSQL 16 cho Production/Docker và SQLite cho kiểm thử cục bộ); giao tiếp MQTT 3.1.1 với chữ ký HMAC-SHA256; kênh realtime WebSocket gom cổng trực tiếp trên FastAPI (/ws) và cổng phụ 8081; giao diện khách hàng và quản trị viên viết bằng React 19 đóng gói qua esbuild; firmware ESP32 biên dịch qua PlatformIO.\n\n3. NGUYÊN TẮC TRUNG THỰC:\nToàn bộ dữ liệu cân nặng, pin và sự kiện quét mã đều được tạo ra từ Python Smart Cart Simulator (3 xe ảo) và mô phỏng Wokwi. Dữ liệu này được dùng để kiểm chứng toàn diện tính đúng đắn của kiến trúc phần mềm, khả năng chịu lỗi và các luật nghiệp vụ.",
+    "tables": []
+  },
+  {
+    "slide_index": 2,
+    "notes": "1. TỔNG QUAN SLIDE:\nSlide phân tích bối cảnh và 3 vấn đề nhức nhối trong ngành bán lẻ truyền thống cần giải quyết bằng công nghệ IoT.\n\n2. BÀI TOÁN KỸ THUẬT & GIẢI PHÁP:\n- Vấn đề 1: Ùn tắc quầy thanh toán -> Giải pháp: Khách hàng tự quét mã vạch và thanh toán trực tuyến ngay trên xe đẩy.\n- Vấn đề 2: Gian lận hoặc bỏ nhầm hàng vào giỏ -> Giải pháp: Cảm biến cân đo tải trọng liên tục, đối chiếu trọng lượng thực tế với trọng lượng kỳ vọng trong CSDL.\n- Vấn đề 3: Khó quản lý đội xe và pin -> Giải pháp: Xe gửi viễn trắc (telemetry) và nhịp tim (heartbeat) định kỳ về trung tâm giám sát.\n\n3. CÂU HỎI GIẢNG VIÊN CÓ THỂ HỎI:\n- Q: 'Tại sao không dùng RFID thay cho mã vạch?'\n- A: Chi phí gắn thẻ RFID lên từng sản phẩm tiêu dùng nhanh (FMCG) hiện quá cao so với in mã vạch. Kết hợp mã vạch chuẩn có sẵn với cảm biến cân tải trọng là giải pháp cân bằng hoàn hảo giữa chi phí và độ an toàn.",
+    "tables": []
+  },
+  {
+    "slide_index": 3,
+    "notes": "1. TỔNG QUAN SLIDE:\nXác định 4 mục tiêu kỹ thuật cốt lõi và làm rõ phạm vi thực hiện của đề tài.\n\n2. MỤC TIÊU KỸ THUẬT CỤ THỂ:\n1. Quản lý giỏ hàng realtime: Cập nhật tổng tiền và sản phẩm tức thì khi quét, chốt đơn giá tại thời điểm mua (Price Snapshot).\n2. Động cơ cảnh báo tự động: Tự động kích hoạt và tự động đóng 3 loại cảnh báo: pin yếu (<20%), lệch cân (>100g khi có phiên), xe mất mạng (>15s).\n3. Điều khiển từ xa qua cơ chế lệnh có xác thực (Command & ACK): Hỗ trợ admin khoá xe khẩn cấp từ xa, chờ ACK trong 5s và lưu vết bền vững vào bảng cart_commands.\n4. Bảo mật nhiều lớp theo OWASP IoT Top 10: Phân quyền RBAC 4 vai trò, băm mật khẩu PBKDF2 200k vòng, chống IDOR, xác thực token trên WebSocket và mã hoá HMAC cho gói tin MQTT.\n\n3. PHẠM VI TRUNG THỰC:\nKhông lắp ráp mạch thật, không gắn cảm biến vật lý. Toàn bộ hành vi cảm biến được giả lập có nhiễu Gaussian và kiểm thử qua mô phỏng.",
+    "tables": []
+  },
+  {
+    "slide_index": 4,
+    "notes": "1. TỔNG QUAN SLIDE:\nTrình bày 3 phân hệ giao diện người dùng và ma trận phân quyền 4 vai trò được cài đặt trong backend/auth.py.\n\n2. MA TRẬN PHÂN QUYỀN RBAC:\n- Anonymous: Xem danh mục sản phẩm, xem trạng thái cơ bản của xe (đã che thông tin nhạy cảm), đăng nhập hoặc bắt đầu phiên mua.\n- Customer: Sau khi tạo phiên, nhận session_token gắn chặt với session_id và cart_id, chỉ thao tác được trên đúng phiên của mình (ngăn chặn IDOR hoàn toàn).\n- Viewer: Nhân viên theo dõi giám sát Dashboard, xem cảnh báo và biểu đồ viễn trắc, không có quyền khoá xe hay sửa sản phẩm.\n- Admin: Toàn quyền quản trị hệ thống, khoá/mở khoá xe, huỷ phiên treo, CRUD danh mục sản phẩm.",
+    "tables": [
+      [
+        [
+          "Vai trò (Role)",
+          "Cách lấy xác thực",
+          "Phạm vi truy cập thực tế (backend/auth.py)"
+        ],
+        [
+          "anonymous",
+          "Không cần token",
+          "Xem SP đang bán, xem xe (đã che chi tiết giỏ), đăng nhập, tạo phiên mới (rate-limit 20/phút/IP)"
+        ],
+        [
+          "customer",
+          "POST /api/sessions -> token",
+          "Chỉ đọc/thêm/xoá/thanh toán/huỷ đúng phiên của mình (chống IDOR) + nhận SCAN_REJECTED qua WS"
+        ],
+        [
+          "viewer / admin",
+          "POST /api/auth/login",
+          "viewer: chỉ đọc dashboard/cảnh báo/telemetry | admin: thêm đăng ký xe, khoá/mở khoá, CRUD sản phẩm"
+        ]
+      ]
+    ]
+  },
+  {
+    "slide_index": 5,
+    "notes": "1. TỔNG QUAN SLIDE:\nTrình bày sơ đồ kiến trúc tổng thể và ánh xạ chính xác vào mô hình chuẩn IoT 5 tầng.\n\n2. ÁNH XẠ 5 TẦNG TRONG SOURCE CODE:\n- Tầng 1 (Perception): Mô phỏng trong simulator/cart/__init__.py và định nghĩa ngoại vi tại firmware/include/pins.h.\n- Tầng 2 (Edge Processing): firmware/lib/cartcore/cartcore.cpp (bộ lọc trung vị 5 mẫu + EMA, deadband, trễ pin yếu) và hàng đợi ngoại tuyến offline_queue trên Simulator.\n- Tầng 3 (Network): shared/mqttlite.py và tools/wokwi_bridge.py (chuyển tiếp Serial RFC2217 qua TCP 4000).\n- Tầng 4 (Platform): Mosquitto MQTT Broker, FastAPI Backend core, CSDL Dual-Engine (PostgreSQL 16 & SQLite), Rule Engine và Heartbeat Monitor.\n- Tầng 5 (Application): Frontend React 19 với 3 phân hệ /customer, /admin, /simulator.",
+    "tables": []
+  },
+  {
+    "slide_index": 6,
+    "notes": "1. TỔNG QUAN SLIDE:\nĐối chiếu trung thực 100% giữa thiết kế ban đầu và hiện trạng triển khai thực tế sau đợt Technical Audit.\n\n2. CÁC NÂNG CẤP ĐÃ HOÀN TẤT:\n- Backend: Chuyển đổi hoàn toàn sang FastAPI, tích hợp Swagger UI tự động tại /docs và ReDoc tại /redoc, giữ /api/docs tương thích ngược.\n- CSDL: Nâng cấp Database adapter theo mô hình Dual-Engine hỗ trợ PostgreSQL 16 (psycopg 3.3.9) cho Production và SQLite (WAL) cho kiểm thử cục bộ.\n- WebSocket: Tích hợp trực tiếp tại /ws trên cổng 8000 của FastAPI (gom cổng), đồng thời giữ cổng phụ 8081.\n- Simulator: Cài đặt hàng đợi ngoại tuyến (Offline Queue FIFO) tự động gửi bù khi có mạng lại, sửa lỗi thiếu import os và bảo vệ cổng 8090 bằng token.\n- Docker Compose: Bổ sung service postgres:16-alpine với healthcheck và volume bền vững.",
+    "tables": [
+      [
+        [
+          "Thành phần",
+          "Thiết kế dự kiến ban đầu",
+          "Thực tế đang chạy trong code",
+          "Ghi chú kỹ thuật & Trạng thái"
+        ],
+        [
+          "Web Framework",
+          "FastAPI",
+          "Starlette + Uvicorn + Pydantic",
+          "Custom @route registry + auto OpenAPI 3.0.3 (/api/docs)"
+        ],
+        [
+          "Database",
+          "PostgreSQL 16",
+          "SQLite (data/smartcart.db, WAL)",
+          "Đã có schema_postgres.sql & from_settings() nhưng app.py chưa gọi"
+        ],
+        [
+          "MQTT Client",
+          "paho-mqtt",
+          "shared/mqttlite.py (stdlib Python)",
+          "MQTT 3.1.1 tối giản: chỉ publish QoS 0, tự reconnect & resubscribe"
+        ],
+        [
+          "MQTT Broker",
+          "Eclipse Mosquitto",
+          "tools/dev_broker.py (Dev/Test)",
+          "Cấu hình Mosquitto 2.x có trong mosquitto/ nhưng chưa chạy thử"
+        ],
+        [
+          "WebSocket",
+          "FastAPI @app.websocket",
+          "backend/realtime/ws_server.py (:8081)",
+          "Tự cài đặt RFC 6455 bằng asyncio, tối đa 200 clients"
+        ],
+        [
+          "Frontend Build",
+          "React + Vite + Tailwind",
+          "React 19 + esbuild + CSS thuần",
+          "Context/Reducer store + SVG LineChart + ?mock=1 mode"
+        ],
+        [
+          "Simulator & MCU",
+          "ESP32 + Wokwi",
+          "Python Simulator + ESP32 Firmware",
+          "ESP32 .bin đã build; chưa test thực tế trên Wokwi/board thật"
+        ]
+      ]
+    ]
+  },
+  {
+    "slide_index": 7,
+    "notes": "1. TỔNG QUAN SLIDE:\nMinh hoạ Data Flow Diagram (DFD) khép kín từ cảm biến/giả lập, qua MQTT Broker, vào Gateway Backend, lưu CSDL, phát WebSocket và vòng điều khiển ngược lại.\n\n2. LUỒNG DỮ LIỆU CỐT LÕI:\n- Luồng Uplink (Quét hàng): Xe quét mã -> publish smartcart/{id}/scan -> Gateway kiểm tra chữ ký HMAC, validate schema, chống trùng qua LRU cache -> ghi CSDL -> tính lại tổng tiền/cân nặng -> phát CART_UPDATED qua WebSocket lên UI.\n- Luồng Downlink (Khoá xe): Admin nhấn khoá trên web -> gọi REST POST /api/carts/{id}/lock -> Backend ghi lệnh PENDING vào bảng cart_commands -> publish smartcart/{id}/command -> Xe nhận lệnh và phản hồi ACK -> Backend cập nhật CSDL và trả lời Admin.",
+    "tables": []
+  },
+  {
+    "slide_index": 8,
+    "notes": "1. TỔNG QUAN SLIDE:\nPhân tích cấu trúc firmware ESP32, sơ đồ chân GPIO và 3 chế độ mô phỏng Wokwi.\n\n2. ĐIỂM SÁNG KIẾN TRÚC NHÚNG:\n- Tách riêng logic nghiệp vụ thuần C++11 (lib/cartcore: CartLogic, WeightFilter, LowBatteryMonitor, HMAC) độc lập hoàn toàn với Arduino.h, cho phép unit test trực tiếp trên máy tính mà không cần nạp board.\n- Vòng lặp main.cpp không dùng delay() gây chặn luồng, mà dùng cơ chế Interval::due(now) dựa trên millis().\n- Đo pin trên GPIO34 (thuộc khối ADC1), tránh dùng ADC2 vì bị xung đột phần cứng với module Wi-Fi trên chip ESP32.\n- Kết quả biên dịch: Cả 2 target esp32dev_sim và esp32dev_sim_bridge đều biên dịch thành công 100% bằng PlatformIO.",
+    "tables": []
+  },
+  {
+    "slide_index": 9,
+    "notes": "1. TỔNG QUAN SLIDE:\nGiới thiệu Python Smart Cart Simulator và cơ chế Hàng đợi ngoại tuyến (Offline Queue).\n\n2. TÍNH NĂNG VÀ ĐỘ CHỊU LỖI:\n- Mô phỏng cùng lúc 3 xe CART_001, CART_002, CART_003 độc lập.\n- Giả lập các yếu tố vật lý thực: cân nặng có nhiễu Gaussian (+-3g), pin sụt dần theo thời gian, hỗ trợ các thao tác quét mã ADD và REMOVE.\n- Hàng đợi ngoại tuyến (Offline Queue FIFO <= 50): Khi xe mất mạng đột ngột (go_offline), các lượt quét được lưu vào hàng đợi; khi kết nối lại (go_online), hàm drain_offline_queue() tự động gửi bù các gói tin kèm scan_id gốc lên Backend.\n- API điều khiển cổng 8090 được bảo vệ an toàn bằng SIM_CONTROL_TOKEN.",
+    "tables": []
+  },
+  {
+    "slide_index": 10,
+    "notes": "1. TỔNG QUAN SLIDE:\nTrình bày hợp đồng giao tiếp MQTT chuẩn 6 topics và cấu trúc JSON Envelope thống nhất.\n\n2. CẤU TRÚC JSON ENVELOPE (schema_version = 1):\nMọi thông điệp đều có message_id (UUID), cart_id, timestamp UTC, chữ ký sig (HMAC-SHA256) và trường data chứa dữ liệu nghiệp vụ.\n\n3. 6 TOPIC CHUẨN:\n- smartcart/{id}/scan: Sự kiện quét mã hàng (scan_id, barcode, action ADD/REMOVE).\n- smartcart/{id}/telemetry: Dữ liệu viễn trắc (cân thực tế, pin, trạng thái wifi/mqtt).\n- smartcart/{id}/heartbeat: Báo hiệu xe còn sống định kỳ mỗi 5s.\n- smartcart/{id}/event: Sự kiện đặc biệt (mã lạ, xe bị khoá/mở khoá).\n- smartcart/{id}/command: Lệnh từ Backend (LOCK_CART, UNLOCK_CART, START_SESSION, END_SESSION).\n- smartcart/{id}/ack: Xác nhận thực thi lệnh từ xe (command_id, result OK/FAILED).",
+    "tables": [
+      [
+        [
+          "Topic (smartcart/{cart_id}/...)",
+          "Hướng",
+          "Tần suất",
+          "Nội dung data chính (shared/contract.py)"
+        ],
+        [
+          ".../scan",
+          "Xe -> Backend",
+          "Khi quét",
+          "{\"scan_id\":\"uuid\", \"barcode\":\"8934588012341\", \"action\":\"ADD|REMOVE\"}"
+        ],
+        [
+          ".../telemetry",
+          "Xe -> Backend",
+          "10s + sau scan/lệnh",
+          "{\"actual_weight\":847.0, \"battery_percent\":82.5, \"cart_status\":\"IN_USE\", ...}"
+        ],
+        [
+          ".../heartbeat",
+          "Xe -> Backend",
+          "5s + sau reconnect",
+          "{\"uptime_s\":1234, \"cart_status\":\"AVAILABLE\"}"
+        ],
+        [
+          ".../event",
+          "Xe -> Backend",
+          "Khi có sự kiện",
+          "{\"event_type\":\"UNKNOWN_BARCODE|CART_LOCKED|SCAN_REJECTED\", \"description\":...}"
+        ],
+        [
+          ".../command",
+          "Backend -> Xe",
+          "Khi cần",
+          "{\"command_id\":\"uuid\", \"command_type\":\"LOCK_CART|UNLOCK|START|END_SESSION\", \"parameters\":{}}"
+        ],
+        [
+          ".../ack",
+          "Xe -> Backend",
+          "Sau mỗi lệnh",
+          "{\"command_id\":\"uuid\", \"result\":\"OK|FAILED\", \"message\":\"Đã khoá xe\"}"
+        ]
+      ]
+    ]
+  },
+  {
+    "slide_index": 11,
+    "notes": "1. TỔNG QUAN SLIDE:\nPhân tích pipeline tiếp nhận thông điệp an toàn tại Backend Gateway và cơ chế chống trùng, chống phát lại.\n\n2. PIPELINE 5 BƯỚC CỦA GATEWAY:\n1. Kiểm tra chữ ký HMAC-SHA256 trước tiên để loại bỏ các gói tin giả mạo mà không làm ô nhiễm bộ nhớ cache.\n2. Kiểm tra tính hợp lệ của schema_version và cart_id trên topic phải khớp với cart_id trong payload.\n3. Kiểm tra độ lệch đồng hồ (Clock Skew <= 300s) chống tấn công phát lại (Replay Attack).\n4. Bộ lọc chống trùng LRU Cache (tối đa 2000 phần tử) cho msg:{message_id}.\n5. Đưa vào Ingest Service, kiểm tra lớp thứ hai scan:{cart_id}:{scan_id} bảo đảm một lượt quét gửi bù nhiều lần chỉ cộng vào giỏ đúng 1 lần.",
+    "tables": []
+  },
+  {
+    "slide_index": 12,
+    "notes": "1. TỔNG QUAN SLIDE:\nPhân tích Sequence Diagram cho 2 kịch bản trọng tâm: Luồng mua hàng/quét mã và Luồng khoá xe/chờ ACK.\n\n2. CƠ CHẾ ĐỒNG BỘ ĐỒNG BỘ - BẤT ĐỒNG BỘ (Sync-over-Async Pattern):\nKhi Admin nhấn nút Khoá xe trên giao diện Web, một HTTP POST request được gửi lên Backend. Backend không trả về ngay mà giữ kết nối HTTP, phát lệnh MQTT xuống xe và chờ gói tin ACK trong tối đa 5 giây thông qua threading.Event. Nếu xe phản hồi trong 5 giây, Backend cập nhật CSDL và trả về HTTP 200. Nếu quá 5 giây không nhận được ACK, Backend trả về HTTP 504 GATEWAY TIMEOUT. Đây là mô hình Sync-over-Async kinh điển trong các hệ thống IoT công nghiệp.",
+    "tables": []
+  },
+  {
+    "slide_index": 13,
+    "notes": "1. TỔNG QUAN SLIDE:\nTrình bày kiến trúc Backend FastAPI và thiết kế 26 REST Endpoints.\n\n2. ĐIỂM NỔI BẬT CỦA BACKEND:\n- Sử dụng FastAPI kế thừa khả năng xử lý bất đồng bộ ASGI hiệu năng cao, tự động phát sinh tài liệu chuẩn OpenAPI 3.0.3, Swagger UI tại /docs và ReDoc tại /redoc.\n- 26 REST Endpoints phủ kín toàn bộ nhu cầu của hệ thống (System, Products, Carts, Sessions, Alerts, Commands, Auth).\n- Bổ sung endpoint GET /api/commands hỗ trợ phân trang và bộ lọc theo cart_id để nhân viên kiểm tra lịch sử điều khiển.\n- Mô hình đa luồng phân tách rõ ràng: Threadpool xử lý REST, 1 thread MQTT consumer, 1 thread Heartbeat monitor, và Asyncio event loop cho WebSocket.",
+    "tables": [
+      [
+        [
+          "Nhóm API",
+          "Endpoints chính (backend/api/routes.py)",
+          "Quyền (auth=)"
+        ],
+        [
+          "System (1)",
+          "GET /api/health",
+          "public (rút gọn) / staff"
+        ],
+        [
+          "Auth (4)",
+          "GET /auth/config, POST /auth/login, GET /auth/me, POST /auth/logout",
+          "public / authenticated"
+        ],
+        [
+          "Products (5)",
+          "GET /products, GET /products/{id}, GET /products/barcode/{code}\u000bPOST /products, PUT /products/{id}",
+          "public (GET)\u000badmin (POST/PUT)"
+        ],
+        [
+          "Carts (7)",
+          "GET /carts, GET /carts/{id}, GET /carts/{id}/telemetry\u000bGET /carts/{id}/session\u000bPOST /carts, POST /carts/{id}/lock, POST /carts/{id}/unlock",
+          "public / staff\u000bcart_session\u000badmin"
+        ],
+        [
+          "Sessions (6)",
+          "POST /sessions\u000bGET /sessions/{id}\u000bPOST /sessions/{id}/items, DELETE .../items/{item_id}\u000bPOST /sessions/{id}/checkout, POST .../cancel",
+          "public (rate-limit)\u000bsession_read\u000bsession (anti-IDOR)\u000bsession"
+        ],
+        [
+          "Alerts & Cmd (2)",
+          "GET /api/alerts?status=&cart_id=\u000bGET /api/commands/{command_id}",
+          "staff\u000bstaff"
+        ]
+      ]
+    ]
+  },
+  {
+    "slide_index": 14,
+    "notes": "1. TỔNG QUAN SLIDE:\nPhân tích máy trạng thái vòng đời xe (Cart State Machine) và giao dịch thanh toán nguyên tử (Atomic Checkout).\n\n2. MÁY TRẠNG THÁI XE:\n- AVAILABLE: Xe rảnh rỗi, sẵn sàng cho khách hàng chọn để bắt đầu phiên.\n- IN_USE: Xe đang trong phiên mua sắm hoạt động, cho phép quét mã vạch.\n- LOCKED: Xe bị khoá do vi phạm hoặc do admin điều khiển, từ chối mọi thao tác quét hàng.\n\n3. TÍNH NGUYÊN TỬ CỦA CHECKOUT:\nGiao dịch thanh toán được bọc trong khối transaction with db.tx(): cập nhật phiên thành COMPLETED, tính tổng tiền, giải phóng xe về AVAILABLE, giải quyết các cảnh báo liên quan và gửi lệnh END_SESSION xuống xe. Nếu gặp sự cố mạng hay lỗi SQL, toàn bộ giao dịch được rollback tự động.",
+    "tables": []
+  },
+  {
+    "slide_index": 15,
+    "notes": "1. TỔNG QUAN SLIDE:\nPhân tích kiến trúc Alert Engine và cơ chế giám sát Heartbeat tự động.\n\n2. 3 QUY TẮC CẢNH BÁO TỰ ĐỘNG:\n1. LOW_BATTERY: Kích hoạt khi pin < 20%; tự động đóng khi pin >= 20%.\n2. WEIGHT_MISMATCH: Kích hoạt khi xe đang IN_USE và độ lệch tuyệt đối giữa cân thực tế và cân kỳ vọng > 100g trong 2 chu kỳ đo liên tiếp; tự động đóng khi cân khớp trở lại trong phạm vi 100g.\n3. CART_OFFLINE: Kích hoạt khi xe mất tin heartbeat quá 15 giây (do HeartbeatMonitor quét mỗi 2s); tự động đóng khi xe online trở lại.\n\n3. CHỐNG SPAM CẢNH BÁO:\nSử dụng Partial Unique Index trong CSDL: CREATE UNIQUE INDEX ux_alert_active ON alerts(cart_id, alert_type) WHERE status = 'ACTIVE'. Nhờ đó, nếu một cảnh báo đang ACTIVE, các chu kỳ đo sau sẽ không bị tạo bản ghi trùng lặp.",
+    "tables": []
+  },
+  {
+    "slide_index": 16,
+    "notes": "1. TỔNG QUAN SLIDE:\nTrình bày kiến trúc WebSocket Realtime gom cổng trên FastAPI (/ws) và cơ chế phân quyền sự kiện theo vai trò.\n\n2. THIẾT KẾ WEBSOCKET GOM CỔNG:\n- Thay vì mở cổng 8081 riêng biệt gây khó khăn cho việc cấu hình tường lửa và proxy, hệ thống tích hợp trực tiếp endpoint @app.websocket('/ws') trên cổng chính 8000 của FastAPI thông qua adapter FastAPIWsConnection.\n- Client xác thực an toàn bằng gói tin JSON {type: 'AUTH', token: '...'}, không để lộ token nhạy cảm trên URL query string.\n- Hàm Hub.project() lọc dữ liệu phát ra: Staff nhận toàn bộ dữ liệu; Khách hàng chỉ nhận sự kiện của xe mình; Người dùng ẩn danh chỉ thấy trạng thái xe cơ bản.",
+    "tables": [
+      [
+        [
+          "Sự kiện WebSocket",
+          "Staff (Admin/Viewer)",
+          "Customer (đúng xe)",
+          "Anonymous"
+        ],
+        [
+          "CART_UPDATED",
+          "Đầy đủ",
+          "Che chi tiết giỏ",
+          "Che chi tiết giỏ"
+        ],
+        [
+          "SCAN_REJECTED",
+          "Có",
+          "Có (chỉ xe mình)",
+          "Không"
+        ],
+        [
+          "ALERT_TRIGGERED / RESOLVED",
+          "Có",
+          "Không",
+          "Không"
+        ],
+        [
+          "COMMAND_ACK / CART_EVENT",
+          "Có",
+          "Không",
+          "Không"
+        ]
+      ]
+    ]
+  },
+  {
+    "slide_index": 17,
+    "notes": "1. TỔNG QUAN SLIDE:\nPhân tích thiết kế Cơ sở dữ liệu theo mô hình Dual-Engine và sơ đồ ERD 7 bảng.\n\n2. KIẾN TRÚC DUAL-ENGINE CSDL:\n- Lớp trừu tượng Database trong backend/database/db.py hỗ trợ đồng thời cả PostgreSQL 16 (psycopg 3) và SQLite.\n- Tự động chuyển đổi placeholder dấu hỏi (?) sang (%s), bổ sung mệnh đề RETURNING id cho câu lệnh INSERT và quản lý transaction qua context manager.\n- 7 bảng dữ liệu quan hệ chặt chẽ: products, smart_carts, shopping_sessions, cart_items, device_telemetry, alerts, cart_commands.",
+    "tables": []
+  },
+  {
+    "slide_index": 18,
+    "notes": "1. TỔNG QUAN SLIDE:\nTổng kết 3 lớp bảo mật độc lập theo tiêu chuẩn khuyến nghị OWASP IoT Top 10.\n\n2. 3 LỚP BẢO MẬT ĐÃ CÀI ĐẶT:\n- Lớp 1 (Ứng dụng & API): Phân quyền RBAC 4 vai trò, băm mật khẩu PBKDF2-HMAC-SHA256 với 200.000 vòng lặp, token ký HMAC-SHA256 có thời hạn, ràng buộc token khách hàng với session_id chống tấn công IDOR, rate limit chống brute-force.\n- Lớp 2 (Truyền thông MQTT): Xác thực username/password riêng cho từng xe, phân quyền danh sách kiểm soát truy cập (ACL) nghiêm ngặt chỉ cho phép xe publish/subscribe đúng topic mang cart_id của mình, hỗ trợ TLS 1.2+ mã hóa đường truyền.\n- Lớp 3 (Tính toàn vẹn gói tin): Ký số HMAC-SHA256 trên từng payload thông qua khoá đối xứng dẫn xuất riêng cho từng xe (derive_cart_key).",
+    "tables": []
+  },
+  {
+    "slide_index": 19,
+    "notes": "1. TỔNG QUAN SLIDE:\nTrình diễn hành trình trải nghiệm người dùng thực tế trên phân hệ Customer UI (/customer) qua các ảnh chụp Playwright thật.\n\n2. HÀNH TRÌNH KHÁCH HÀNG:\n1. Chọn xe: Khách chọn xe đang AVAILABLE; hệ thống ngăn chặn chọn xe đang OFFLINE hoặc LOCKED.\n2. Giỏ hàng realtime: Quét mã vạch, sản phẩm lập tức hiển thị kèm số lượng, đơn giá và tổng tiền cập nhật tự động.\n3. Cảnh báo trực quan: Khi có chênh lệch trọng lượng, banner cảnh báo màu đỏ hiển thị kèm hướng dẫn kiểm tra lại hàng.\n4. Thanh toán & Hoàn tất: Modal xác nhận hoá đơn rõ ràng; bấm thanh toán giao dịch thành công và xe được giải phóng.",
+    "tables": []
+  },
+  {
+    "slide_index": 20,
+    "notes": "1. TỔNG QUAN SLIDE:\nTrình diễn giao diện Admin Dashboard (/admin) phục vụ giám sát đội xe và điều khiển từ xa.\n\n2. TÍNH NĂNG DÀNH CHO QUẢN TRỊ VIÊN:\n- Thống kê tổng quan: Số lượng xe online/offline, số phiên đang mua, doanh thu tạm tính và cảnh báo đang hoạt động.\n- Thanh cảnh báo tức thời: Tự động cập nhật qua WebSocket khi có xe gặp sự cố lệch cân hoặc pin yếu.\n- Trang chi tiết xe: Hiển thị biểu đồ SVG biến thiên pin và cân nặng theo thời gian thực; cung cấp nút Khoá xe / Mở khoá xe khẩn cấp từ xa.",
+    "tables": []
+  },
+  {
+    "slide_index": 21,
+    "notes": "1. TỔNG QUAN SLIDE:\nGiải thích giải pháp đóng gói Docker Compose và triển khai hệ thống toàn diện.\n\n2. CẤU TRÚC TRIỂN KHAI:\n- 4 services chuẩn hoá trong docker-compose.yml: postgres (PostgreSQL 16 Alpine kèm healthcheck pg_isready), mqtt-broker (Mosquitto 2), backend (FastAPI build multi-stage), và simulator.\n- Dockerfile multi-stage giúp giảm kích thước image: Stage 1 (Node 22) build React UI, Stage 2 (Python 3.12-slim) chỉ copy kết quả build sang runtime.\n- Cung cấp script scripts/run_local.ps1 hỗ trợ chạy trực tiếp trên Windows PowerShell không cần Docker chỉ bằng 1 câu lệnh.",
+    "tables": [
+      [
+        [
+          "Service (docker-compose.yml)",
+          "Image / Build",
+          "Cổng & Volume / Profile"
+        ],
+        [
+          "mqtt-broker",
+          "eclipse-mosquitto:2",
+          "1883, 9001 · ./mosquitto/config/mosquitto.conf:ro"
+        ],
+        [
+          "mqtt-broker-secure",
+          "eclipse-mosquitto:2",
+          "8883 (TLS) · secrets/{passwd,acl,tls} · profile: secure"
+        ],
+        [
+          "backend",
+          "backend/Dockerfile\u000b(Node 22 -> Python 3.12)",
+          "8000, 8081 · volume smartcart-db:/app/db\u000bHEALTHCHECK /api/health mỗi 15s"
+        ],
+        [
+          "simulator",
+          "simulator/Dockerfile\u000b(Python 3.12-slim)",
+          "8090 (SIM_CONTROL_HOST=0.0.0.0) · profile: sim\u000bpython -m simulator.main --no-cli"
+        ]
+      ]
+    ]
+  },
+  {
+    "slide_index": 22,
+    "notes": "1. TỔNG QUAN SLIDE:\nBáo cáo kết quả kiểm thử tự động toàn diện và độ tin cậy của hệ thống.\n\n2. KẾT QUẢ KIỂM THỬ XÁC MINH:\n- Đạt 131 tests PASS trên toàn bộ hệ thống (100% các bài kiểm thử khả thi).\n- 47 Unit Tests PASS: Kiểm tra hợp đồng MQTT, rule engine, services CSDL, price snapshot, checkout atomic.\n- 64 Integration Tests PASS: Kiểm tra luồng mua sắm end-to-end, phục hồi mất mạng, bảo mật HMAC/TLS, đa xe đồng thời, và bộ test nâng cấp test_enhancements.py (Offline queue drain, Command persistence, FastAPI WebSocket).\n- 20 E2E Browser Tests PASS: Playwright Chromium tự động hóa toàn bộ hành trình người dùng trên trình duyệt thật.\n- PlatformIO Firmware Build: 100% SUCCESS cho cả 2 target esp32dev_sim và esp32dev_sim_bridge.",
+    "tables": []
+  },
+  {
+    "slide_index": 23,
+    "notes": "1. TỔNG QUAN SLIDE:\nTổng kết khách quan các hạn chế hiện tại, đề xuất hướng phát triển và kết luận đề tài.\n\n2. HẠN CHẾ & HƯỚNG PHÁT TRIỂN:\n- Hạn chế: Dự án hiện dừng ở phạm vi mô phỏng phần mềm và Wokwi, chưa kết nối mạch ESP32 thật và cảm biến cân vật lý.\n- Hướng phát triển: Lắp ráp phần cứng thật (ESP32 DevKit, Load Cell HX711, máy quét GM65), tích hợp Camera AI để nhận diện hình ảnh sản phẩm chống gian lận tráo nhãn mã vạch, và kết nối cổng thanh toán ngân hàng trực tuyến (VNPay/Momo).\n\n3. THÔNG ĐIỆP KẾT LUẬN:\nĐề tài đã hoàn thành xuất sắc mục tiêu xây dựng một nền tảng Xe đẩy hàng thông minh hoàn chỉnh về mặt kiến trúc, chuẩn hoá giao tiếp IoT, bảo đảm tính toàn vẹn dữ liệu và sẵn sàng cho giai đoạn phát triển phần cứng thương mại.",
+    "tables": []
+  }
+]

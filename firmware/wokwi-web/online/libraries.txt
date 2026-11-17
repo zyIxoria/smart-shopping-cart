@@ -1,0 +1,6 @@
+# Thư viện (tên theo Arduino Library Manager)
+PubSubClient
+HX711 Arduino Library
+Adafruit SSD1306
+Adafruit GFX Library
+Adafruit BusIO

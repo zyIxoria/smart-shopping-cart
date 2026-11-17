@@ -1,0 +1,6 @@
+# Runtime (Backend + Simulator). Simulator chỉ cần thư viện chuẩn Python.
+fastapi>=0.115,<1.0
+starlette>=0.40,<2
+uvicorn>=0.30
+pydantic>=2.6,<3
+psycopg[binary]>=3.2,<4.0

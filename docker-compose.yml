@@ -1,0 +1,90 @@
+# Chạy toàn bộ hệ thống:  docker compose up --build
+#   Giao diện + API : http://localhost:8000   (Swagger: /docs & /api/docs, ReDoc: /redoc)
+#   WebSocket       : ws://localhost:8000/ws  (và ws://localhost:8081/ws)
+#   MQTT            : localhost:1883          (WebSocket: 9001)
+#   PostgreSQL 16   : localhost:5432
+#   Simulator UI    : http://localhost:8090/sim/carts
+# Cấu hình lấy từ file .env (xem .env.example).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartcart-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smartcart}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-smartcart}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    container_name: smartcart-mqtt
+    ports: ["1883:1883", "9001:9001"]
+    volumes: ["./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro"]
+    restart: unless-stopped
+
+  # Broker BẢO MẬT (đăng nhập + ACL + TLS 8883). Trước đó chạy:  python -m tools.provision  &&  sh secrets/mosquitto/make_passwd.sh
+  # rồi:  docker compose --profile secure up   (đặt trong .env: MQTT_HOST=mqtt-broker-secure MQTT_PORT=8883 MQTT_TLS=1 ...)
+  mqtt-broker-secure:
+    image: eclipse-mosquitto:2
+    ports: ["8883:8883"]
+    volumes:
+      - ./mosquitto/secure/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./secrets/mosquitto/passwd:/mosquitto/config/passwd:ro
+      - ./secrets/mosquitto/acl:/mosquitto/config/acl:ro
+      - ./secrets/tls:/mosquitto/certs:ro
+    profiles: ["secure"]
+    restart: unless-stopped
+
+  backend:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    container_name: smartcart-backend
+    env_file: [{ path: .env, required: false }]
+    environment:
+      MQTT_HOST: mqtt-broker
+      MQTT_PORT: "1883"
+      DB_BACKEND: ${DB_BACKEND:-postgres}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/smartcart}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-smartcart}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_PATH: /app/db/smartcart.db
+    ports: ["${API_PORT:-8000}:8000", "${WS_PORT:-8081}:8081"]
+    volumes:
+      - smartcart-db:/app/db
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  simulator:
+    build: { context: ., dockerfile: simulator/Dockerfile }
+    container_name: smartcart-simulator
+    env_file: [{ path: .env, required: false }]
+    environment:
+      MQTT_HOST: mqtt-broker
+      MQTT_PORT: "1883"
+      SIM_CONTROL_HOST: 0.0.0.0     # API điều khiển cho trang /simulator (DEV/DEMO)
+      SIM_CONTROL_TOKEN: ${SIM_CONTROL_TOKEN:-}
+    ports: ["8090:8090"]
+    depends_on:
+      - mqtt-broker
+    profiles: ["sim"]          # docker compose --profile sim up
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  smartcart-db:
+  postgres-data:
