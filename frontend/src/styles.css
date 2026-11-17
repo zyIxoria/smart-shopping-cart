@@ -28,7 +28,7 @@ p { margin: 0 0 .6rem; }
 .tag { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--primary); background: var(--primary-soft); padding: 2px 8px; border-radius: 999px; }
 .link-muted { color: var(--muted); font-size: .92rem; }
 .container { width: 100%; max-width: 1040px; margin: 0 auto; padding: 24px; flex: 1; }
-.container.wide { max-width: 1240px; }
+.container.wide { width: 100%; max-width: 100%; margin: 0 auto; padding: 18px 24px; }
 .page-title { margin-bottom: 16px; }
 .nav { display: flex; gap: 4px; }
 .nav-link { color: var(--muted); padding: 7px 14px; border-radius: 9px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
@@ -240,8 +240,8 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
 
 .sim2d-cockpit {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr) 320px;
-  gap: 14px;
+  grid-template-columns: 240px minmax(0, 1fr) 340px;
+  gap: 16px;
   padding: 12px 0;
   align-items: start;
 }
