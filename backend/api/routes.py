@@ -163,6 +163,14 @@ def get_cart(request, body):
     return cart if principal_of(request).is_staff else cart_svc.public_cart(cart)
 
 
+@route("DELETE", "/api/carts/{cart_id}", "Xóa một xe khỏi hệ thống", "Carts", status=204, errors=(400, 404), auth="admin")
+def delete_cart(request, body):
+    ctx = ctx_of(request)
+    cid = request.path_params["cart_id"]
+    cart_svc.delete_cart(ctx, cid)
+    return 204, None
+
+
 @route("GET", "/api/carts/{cart_id}/telemetry", "Lịch sử telemetry của xe", "Carts", errors=(404,), auth="staff",
        query=[("limit", "integer", "Số bản ghi mới nhất (mặc định 100, tối đa 1000)")])
 def cart_telemetry(request, body):

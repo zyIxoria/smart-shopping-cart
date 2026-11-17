@@ -41,6 +41,11 @@ function reducer(s, a) {
       return { ...s, carts, loaded: true, error: null };
     }
     case 'cart': return { ...s, carts: { ...s.carts, [a.cart.cart_id]: a.cart } };
+    case 'cart_delete': {
+      const rest = { ...s.carts };
+      delete rest[a.cart_id];
+      return { ...s, carts: rest };
+    }
     case 'alerts': return { ...s, alerts: a.alerts };
     case 'alert_upsert': {
       const rest = s.alerts.filter((x) => x.id !== a.alert.id);
@@ -104,6 +109,7 @@ export function StoreProvider({ children }) {
         dispatch({ type: 'log_event', event: ev });
         switch (ev.type) {
           case 'CART_UPDATED': dispatch({ type: 'cart', cart: ev.cart }); break;
+          case 'CART_DELETED': dispatch({ type: 'cart_delete', cart_id: ev.cart_id }); break;
           case 'ALERT_TRIGGERED':
             dispatch({ type: 'alert_upsert', alert: ev.alert });
             toast('warn', `${ev.cart_id}: ${ev.alert.detail}`, { scope: 'admin' });

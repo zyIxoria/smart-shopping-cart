@@ -125,3 +125,15 @@ def test_lru_set():
     assert not s.seen("a") and s.seen("a")
     s.seen("b"); s.seen("c")
     assert not s.seen("a")       # "a" đã bị loại khỏi LRU
+
+
+def test_delete_cart(ctx):
+    online(ctx)
+    s = sess.start_session(ctx, "CART_001")
+    with pytest.raises(ApiError):
+        cart_svc.delete_cart(ctx, "CART_001")
+    sess.cancel(ctx, s["id"])
+    cart_svc.delete_cart(ctx, "CART_001")
+    assert not ctx.db.one("SELECT cart_id FROM smart_carts WHERE cart_id='CART_001'")
+    assert any(ev["type"] == "CART_DELETED" and ev["cart_id"] == "CART_001" for ev in ctx.events)
+

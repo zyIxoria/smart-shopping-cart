@@ -99,3 +99,22 @@ def public_cart(cart: dict) -> dict:
     if out.get("session"):
         out["session"] = {"id": out["session"]["id"], "started_at": out["session"]["started_at"]}
     return out
+
+
+def delete_cart(ctx, cart_id: str) -> None:
+    get_cart_row(ctx, cart_id)
+    sess = active_session_row(ctx, cart_id)
+    if sess:
+        from backend.services.errors import bad_request
+        raise bad_request("Không thể xóa xe đang trong phiên mua hàng hoạt động")
+    with ctx.db.tx():
+        session_ids = [r["id"] for r in ctx.db.all("SELECT id FROM shopping_sessions WHERE cart_id=?", (cart_id,))]
+        for sid in session_ids:
+            ctx.db.execute("DELETE FROM cart_items WHERE session_id=?", (sid,))
+        ctx.db.execute("DELETE FROM shopping_sessions WHERE cart_id=?", (cart_id,))
+        ctx.db.execute("DELETE FROM alerts WHERE cart_id=?", (cart_id,))
+        ctx.db.execute("DELETE FROM device_telemetry WHERE cart_id=?", (cart_id,))
+        ctx.db.execute("DELETE FROM cart_commands WHERE cart_id=?", (cart_id,))
+        ctx.db.execute("DELETE FROM smart_carts WHERE cart_id=?", (cart_id,))
+    ctx.hub.publish("CART_DELETED", {"cart_id": cart_id})
+

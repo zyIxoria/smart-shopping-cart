@@ -189,3 +189,17 @@ def test_simulator_control_api_auth_protection(stack):
         assert code2 == 200 and snap["cart"]["battery_percent"] == 42.0
     finally:
         srv.stop()
+
+
+def test_delete_cart_api(auth_stack):
+    """Admin có thể xóa xe và dọn dẹp các bản ghi liên quan; người dùng bình thường không xóa được."""
+    st = auth_stack
+    code, created = st.admin.post("/api/carts", {"cart_id": "CART_TMP", "name": "Xe tạm"})
+    assert code == 201
+
+    assert st.api.delete("/api/carts/CART_TMP")[0] == 401
+
+    code_del, _ = st.admin.delete("/api/carts/CART_TMP")
+    assert code_del == 204
+    assert st.api.get("/api/carts/CART_TMP")[0] == 404
+

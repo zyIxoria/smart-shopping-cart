@@ -150,6 +150,15 @@ export const mockApi = {
     mkCart(cart_id, cart_id, { name: name || cart_id, connection_status: 'OFFLINE', battery_percent: null });
     push(cart_id); return cartView(cart_id);
   },
+  async deleteCart(id) {
+    await delay();
+    cartOr404(id);
+    const s = activeSession(id);
+    must(!s, 400, 'BAD_REQUEST', 'Không thể xóa xe đang trong phiên mua hàng hoạt động');
+    delete carts[id];
+    delete telemetry[id];
+    emit('CART_DELETED', { cart_id: id });
+  },
   async getCarts() { await delay(); return Object.keys(carts).map(cartView); },
   async getCart(id) { await delay(); cartOr404(id); return cartView(id); },
   async getTelemetry(id) { await delay(); cartOr404(id); return telemetry[id].slice(-60); },

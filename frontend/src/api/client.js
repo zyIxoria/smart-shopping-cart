@@ -55,6 +55,7 @@ export const realApi = {
   createProduct: (p) => req('POST', '/products', p),
   updateProduct: (id, p) => req('PUT', `/products/${id}`, p),
   createCart: (cart_id, name) => req('POST', '/carts', name ? { cart_id, name } : { cart_id }),
+  deleteCart: (id) => req('DELETE', `/carts/${id}`),
   getCarts: () => req('GET', '/carts'),
   getCart: (id) => req('GET', `/carts/${id}`),
   getTelemetry: (id, limit = 60) => req('GET', `/carts/${id}/telemetry?limit=${limit}`),

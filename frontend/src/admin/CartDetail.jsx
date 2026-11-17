@@ -20,6 +20,7 @@ export default function CartDetail({ params }) {
   const [commands, setCommands] = useState([]);
   const [confirm, setConfirm] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const loadTelemetry = useCallback(() => api.getTelemetry(id, 60).then(setTelemetry).catch(() => {}), [id]);
@@ -55,6 +56,19 @@ export default function CartDetail({ params }) {
     } catch (e) { toast('error', e.message, { scope: 'admin' }); } finally { setBusy(false); setConfirmCancel(false); }
   }
 
+  async function deleteCart() {
+    setBusy(true);
+    try {
+      await api.deleteCart(id);
+      toast('ok', `Đã xóa xe ${id} khỏi hệ thống`, { scope: 'admin' });
+      window.location.hash = '#/admin';
+    } catch (e) {
+      toast('error', e.message, { scope: 'admin' });
+      setBusy(false);
+      setConfirmDelete(false);
+    }
+  }
+
   const pts = (key) => telemetry.map((t) => ({ y: t[key], t: t.timestamp }));
 
   return (
@@ -65,9 +79,16 @@ export default function CartDetail({ params }) {
           <h1 className="page-title" data-testid="detail-title">{cart.name} <span className="muted mono">({cart.cart_id})</span></h1>
           <div className="status-badges"><StatusBadge status={cart.cart_status} /><ConnBadge status={cart.connection_status} /></div>
         </div>
-        <button className={`btn ${locked ? 'btn-primary' : 'btn-danger'}`} onClick={() => setConfirm(true)} disabled={busy || cart.connection_status !== 'ONLINE' || !canWrite(auth)} data-testid="lock-toggle" title={!canWrite(auth) ? 'Tài khoản chỉ xem – cần quyền quản trị để khoá/mở khoá' : cart.connection_status !== 'ONLINE' ? 'Xe đang offline, không thể gửi lệnh' : ''}>
-          {busy ? 'Đang chờ xe xác nhận…' : locked ? '🔓 Mở khoá xe' : '🔒 Khoá xe'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button className={`btn ${locked ? 'btn-primary' : 'btn-danger'}`} onClick={() => setConfirm(true)} disabled={busy || cart.connection_status !== 'ONLINE' || !canWrite(auth)} data-testid="lock-toggle" title={!canWrite(auth) ? 'Tài khoản chỉ xem – cần quyền quản trị để khoá/mở khoá' : cart.connection_status !== 'ONLINE' ? 'Xe đang offline, không thể gửi lệnh' : ''}>
+            {busy ? 'Đang chờ xe xác nhận…' : locked ? '🔓 Mở khoá xe' : '🔒 Khoá xe'}
+          </button>
+          {canWrite(auth) && (
+            <button className="btn btn-outline-danger" onClick={() => setConfirmDelete(true)} disabled={busy || Boolean(session)} data-testid="delete-cart" title={session ? 'Không thể xóa xe đang trong phiên mua hàng' : 'Xóa xe này khỏi hệ thống'}>
+              🗑️ Xóa xe
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="detail-grid">
@@ -159,6 +180,16 @@ export default function CartDetail({ params }) {
           <div className="modal-actions">
             <button className="btn" onClick={() => setConfirm(false)} disabled={busy}>Huỷ</button>
             <button className={`btn ${locked ? 'btn-primary' : 'btn-danger'}`} onClick={toggleLock} disabled={busy} data-testid="lock-confirm">{busy ? 'Đang gửi…' : 'Xác nhận'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {confirmDelete && (
+        <Modal title={`Xóa xe ${id}?`} onClose={() => !busy && setConfirmDelete(false)}>
+          <p>Xe <b>{cart.name} ({id})</b> và các lịch sử cảnh báo, telemetry liên quan sẽ bị xóa khỏi hệ thống. Hành động này không thể hoàn tác.</p>
+          <div className="modal-actions">
+            <button className="btn" onClick={() => setConfirmDelete(false)} disabled={busy}>Hủy</button>
+            <button className="btn btn-danger" onClick={deleteCart} disabled={busy} data-testid="delete-cart-confirm">{busy ? 'Đang xóa…' : 'Xác nhận xóa'}</button>
           </div>
         </Modal>
       )}
