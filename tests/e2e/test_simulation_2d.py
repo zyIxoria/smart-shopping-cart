@@ -82,9 +82,8 @@ def test_simulation_select_move_and_pause_resume_reset(page, stack):
     page.get_by_test_id("map-cart-CART_002").click()
     expect(page.get_by_test_id("inspector-cart-id")).to_have_text("CART_002")
 
-    # Di chuyển CART_002 tới khu vực Đồ uống & Sữa
-    page.get_by_test_id("select-target-zone").select_option("beverage")
-    page.get_by_test_id("btn-move-cart").click()
+    # Bắt đầu phiên để kích hoạt ONLINE cho CART_002 (mặc định xe ở trạng thái Offline tại bãi giữ xe)
+    page.get_by_test_id("btn-start-session").click()
     expect(page.get_by_test_id("inspector-panel")).to_contain_text("Đồ uống & Sữa", timeout=7000)
 
     # Pause -> ra lệnh di chuyển tới Gia dụng -> kiểm tra trạng thái PAUSED giữ nguyên vị trí

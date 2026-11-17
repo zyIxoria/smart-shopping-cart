@@ -52,6 +52,12 @@ export default function SupermarketSimulation() {
   const [paused, setPaused] = useState(false);
   const [checkoutFlags, setCheckoutFlags] = useState({});
 
+  // Trạng thái online mô phỏng: { [cart_id]: boolean } (ban đầu tất cả xe chưa mở phiên đều OFFLINE)
+  const [onlineCarts, setOnlineCarts] = useState({});
+
+  // Tiến trình tự động checkout: 'to_checkout' -> 'to_exit' -> 'to_bay'
+  const checkoutStageRef = useRef({});
+
   // Toạ độ và tuyến đường waypoint 2D của từng xe
   const [positions, setPositions] = useState({});
   const [routes, setRoutes] = useState({});
@@ -70,11 +76,33 @@ export default function SupermarketSimulation() {
     }));
   }, [state.carts, simCarts]);
 
+  // Kiểm tra trạng thái Online của xe: Mặc định khi khởi động mọi xe chưa mở phiên đều OFFLINE
+  const isCartOnline = useCallback((cid) => {
+    if (onlineCarts[cid] !== undefined) return onlineCarts[cid];
+    const b = state.carts[cid];
+    const s = simCarts[cid];
+    if (b?.session?.id || s?.session_id) return true;
+    return false;
+  }, [onlineCarts, state.carts, simCarts]);
+
+  // Danh sách xe với connection_status phản ánh đúng logic khởi động offline / phiên online
+  const effectiveCarts = useMemo(() => {
+    return mergedCarts.map((c) => {
+      const isOnline = isCartOnline(c.cart_id);
+      const connStatus = isOnline ? 'ONLINE' : 'OFFLINE';
+      return {
+        ...c,
+        backend: c.backend ? { ...c.backend, connection_status: connStatus } : null,
+        sim: c.sim ? { ...c.sim, connected: isOnline } : null,
+      };
+    });
+  }, [mergedCarts, isCartOnline]);
+
   useEffect(() => {
-    if (mergedCarts.length > 0 && !mergedCarts.some((c) => c.cart_id === selectedId)) {
-      setSelectedId(mergedCarts[0].cart_id);
+    if (effectiveCarts.length > 0 && !effectiveCarts.some((c) => c.cart_id === selectedId)) {
+      setSelectedId(effectiveCarts[0].cart_id);
     }
-  }, [mergedCarts, selectedId]);
+  }, [effectiveCarts, selectedId]);
 
   useEffect(() => {
     let changed = false;
@@ -130,7 +158,7 @@ export default function SupermarketSimulation() {
     return () => clearInterval(timer);
   }, [loadSim]);
 
-  const currentEntry = mergedCarts.find((c) => c.cart_id === selectedId) || null;
+  const currentEntry = effectiveCarts.find((c) => c.cart_id === selectedId) || null;
   const currentBackend = currentEntry?.backend || null;
   const currentSim = currentEntry?.sim || null;
   const activeSessionId = currentBackend?.session?.id || null;
@@ -151,6 +179,69 @@ export default function SupermarketSimulation() {
       .catch(() => { if (!cancelled) setSessionDetail(null); });
     return () => { cancelled = true; };
   }, [activeSessionId, currentBackend?.session?.item_count, currentBackend?.session?.total_amount]);
+
+  const moveCartToZone = useCallback((cartId, zoneId, bypassOfflineCheck = false) => {
+    if (!bypassOfflineCheck && !isCartOnline(cartId)) {
+      toast('warn', `Xe ${cartId} đang OFFLINE tại bãi giữ xe. Hãy bấm "Bắt đầu phiên" để kích hoạt xe trước khi di chuyển!`, { scope: 'admin' });
+      return;
+    }
+    const zone = zoneById(zoneId);
+    if (!zone) return;
+    const cur = positionsRef.current[cartId] || initialSlotForIndex(0);
+    const startWp = cur.wp || nearestWaypoint(cur.x, cur.y);
+    const path = findPathWaypoints(startWp, zone.stop);
+    const nextRoutes = { ...routesRef.current, [cartId]: path };
+    routesRef.current = nextRoutes;
+    setRoutes(nextRoutes);
+    if (zoneId === 'entrance') {
+      setCheckoutFlags((prev) => ({ ...prev, [cartId]: false }));
+    }
+  }, [isCartOnline, toast]);
+
+  const moveCartToZoneRef = useRef(moveCartToZone);
+  moveCartToZoneRef.current = moveCartToZone;
+
+  // Xử lý chuỗi sự kiện khi xe đến điểm đích của chặng (quầy thanh toán -> lối ra -> ngắt mạng offline -> quay về bãi giữ xe)
+  const handleDestinationReached = useCallback((cid, arrivedZone) => {
+    const stage = checkoutStageRef.current[cid];
+    if (!stage) return;
+
+    if (stage === 'to_checkout') {
+      // 1. Đã tới Quầy thanh toán -> dừng 1.2s rồi tự động di chuyển ra Lối ra
+      checkoutStageRef.current[cid] = 'waiting_at_checkout';
+      setTimeout(() => {
+        checkoutStageRef.current[cid] = 'to_exit';
+        moveCartToZoneRef.current(cid, 'exit', true);
+        toast('ok', `Xe ${cid} thanh toán xong, đang di chuyển ra Lối ra...`, { scope: 'admin' });
+      }, 1200);
+    } else if (stage === 'to_exit') {
+      // 2. Đã tới Lối ra -> chuyển ngay sang OFFLINE, dừng 1.2s rồi tự động trở về Bãi giữ xe
+      checkoutStageRef.current[cid] = 'waiting_at_exit';
+      setOnlineCarts((prev) => ({ ...prev, [cid]: false }));
+      simApi.connection(cid, false).catch(() => {});
+      toast('warn', `Xe ${cid} đã đến Lối ra · Chuyển sang OFFLINE · Tự động trở về bãi giữ xe...`, { scope: 'admin' });
+      setTimeout(() => {
+        checkoutStageRef.current[cid] = 'to_bay';
+        moveCartToZoneRef.current(cid, 'entrance', true);
+      }, 1200);
+    } else if (stage === 'to_bay') {
+      // 3. Đã về tới Bãi giữ xe -> đỗ vào slot ban đầu, xoá stage và giữ trạng thái OFFLINE
+      delete checkoutStageRef.current[cid];
+      setCheckoutFlags((prev) => ({ ...prev, [cid]: false }));
+      setOnlineCarts((prev) => ({ ...prev, [cid]: false }));
+      const cIdx = mergedCarts.findIndex((c) => c.cart_id === cid);
+      const parkSlot = initialSlotForIndex(cIdx >= 0 ? cIdx : 0);
+      positionsRef.current = {
+        ...positionsRef.current,
+        [cid]: parkSlot,
+      };
+      setPositions({ ...positionsRef.current });
+      toast('ok', `Xe ${cid} đã về bãi đỗ an toàn (trạng thái OFFLINE), sẵn sàng cho lượt khách tiếp theo`, { scope: 'admin' });
+    }
+  }, [mergedCarts, toast]);
+
+  const handleDestinationReachedRef = useRef(handleDestinationReached);
+  handleDestinationReachedRef.current = handleDestinationReached;
 
   // Vòng lặp requestAnimationFrame di chuyển xe mượt mà theo hành lang
   useEffect(() => {
@@ -191,6 +282,9 @@ export default function SupermarketSimulation() {
               nextRoutes[cid] = route;
               posChanged = true;
               routeChanged = true;
+              if (route.length === 0) {
+                setTimeout(() => handleDestinationReachedRef.current(cid, targetPt.zone), 0);
+              }
             } else {
               nextPos[cid] = {
                 ...cur,
@@ -219,20 +313,6 @@ export default function SupermarketSimulation() {
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  const moveCartToZone = useCallback((cartId, zoneId) => {
-    const zone = zoneById(zoneId);
-    if (!zone) return;
-    const cur = positionsRef.current[cartId] || initialSlotForIndex(0);
-    const startWp = cur.wp || nearestWaypoint(cur.x, cur.y);
-    const path = findPathWaypoints(startWp, zone.stop);
-    const nextRoutes = { ...routesRef.current, [cartId]: path };
-    routesRef.current = nextRoutes;
-    setRoutes(nextRoutes);
-    if (zoneId === 'entrance') {
-      setCheckoutFlags((prev) => ({ ...prev, [cartId]: false }));
-    }
-  }, []);
-
   const runAction = async (label, fn) => {
     setBusyAction(label);
     try {
@@ -249,7 +329,25 @@ export default function SupermarketSimulation() {
     const existingSid = state.carts[cartId]?.session?.id || simCarts[cartId]?.session_id;
     if (existingSid) return existingSid;
 
-    const sess = await api.createSession(cartId);
+    setOnlineCarts((prev) => ({ ...prev, [cartId]: true }));
+    await simApi.connection(cartId, true).catch(() => {});
+
+    let sess = null;
+    let lastErr = null;
+    for (let i = 0; i < 5; i++) {
+      try {
+        sess = await api.createSession(cartId);
+        break;
+      } catch (err) {
+        lastErr = err;
+        if (err.message?.includes('OFFLINE') || err.message?.includes('CART_OFFLINE')) {
+          await new Promise((r) => setTimeout(r, 200));
+          continue;
+        }
+        throw err;
+      }
+    }
+    if (!sess) throw lastErr;
     setCheckoutFlags((prev) => ({ ...prev, [cartId]: false }));
     const deadline = Date.now() + 2500;
     while (Date.now() < deadline) {
@@ -263,13 +361,32 @@ export default function SupermarketSimulation() {
 
   const handleStartSession = () => runAction('start-session', async () => {
     if (!writable) throw new Error('Tài khoản chỉ xem không có quyền bắt đầu phiên');
-    const sess = await api.createSession(selectedId);
+    setOnlineCarts((prev) => ({ ...prev, [selectedId]: true }));
+    await simApi.connection(selectedId, true).catch(() => {});
+
+    let sess = null;
+    let lastErr = null;
+    for (let i = 0; i < 5; i++) {
+      try {
+        sess = await api.createSession(selectedId);
+        break;
+      } catch (err) {
+        lastErr = err;
+        if (err.message?.includes('OFFLINE') || err.message?.includes('CART_OFFLINE')) {
+          await new Promise((r) => setTimeout(r, 200));
+          continue;
+        }
+        throw err;
+      }
+    }
+    if (!sess) throw lastErr;
+
     setCheckoutFlags((prev) => ({ ...prev, [selectedId]: false }));
     const curZone = positionsRef.current[selectedId]?.zone;
     if (!curZone || curZone === 'entrance' || curZone === 'exit' || curZone === 'checkout') {
-      moveCartToZone(selectedId, 'beverage');
+      moveCartToZone(selectedId, 'beverage', true);
     }
-    toast('ok', `Đã bắt đầu phiên #${sess.id} cho ${selectedId}`, { scope: 'admin' });
+    toast('ok', `Đã kích hoạt ONLINE và bắt đầu phiên #${sess.id} cho ${selectedId}`, { scope: 'admin' });
   });
 
   const handleScanAdd = () => runAction('scan-add', async () => {
@@ -277,7 +394,7 @@ export default function SupermarketSimulation() {
     const prod = catalog.find((p) => p.barcode === selectedBarcode);
     await ensureSessionReady(selectedId);
     if (prod) {
-      moveCartToZone(selectedId, inferZoneForProduct(prod));
+      moveCartToZone(selectedId, inferZoneForProduct(prod), true);
     }
     const res = await simApi.scan(selectedId, selectedBarcode, 'ADD');
     if (res.offline_queued) {
@@ -305,7 +422,8 @@ export default function SupermarketSimulation() {
     if (!activeSessionId) throw new Error(`${selectedId} chưa có phiên mua hàng đang hoạt động`);
     const result = await api.checkout(activeSessionId);
     setCheckoutFlags((prev) => ({ ...prev, [selectedId]: true }));
-    moveCartToZone(selectedId, 'checkout');
+    checkoutStageRef.current[selectedId] = 'to_checkout';
+    moveCartToZone(selectedId, 'checkout', true);
     toast('ok', `Checkout thành công phiên #${activeSessionId} · ${vnd(result.total_amount)}`, { scope: 'admin' });
   });
 
@@ -322,6 +440,7 @@ export default function SupermarketSimulation() {
   });
 
   const handleConnection = (online) => runAction('connection', async () => {
+    setOnlineCarts((prev) => ({ ...prev, [selectedId]: online }));
     await simApi.connection(selectedId, online);
     toast(online ? 'ok' : 'warn', `${selectedId} → ${online ? 'ONLINE (kết nối lại)' : 'OFFLINE (ngắt mạng)'}`, { scope: 'admin' });
   });
@@ -329,6 +448,8 @@ export default function SupermarketSimulation() {
   const handleResetSimulation = () => runAction('reset-sim', async () => {
     setPaused(false);
     setCheckoutFlags({});
+    setOnlineCarts({});
+    checkoutStageRef.current = {};
     const resetPos = {};
     mergedCarts.forEach((c, idx) => {
       resetPos[c.cart_id] = initialSlotForIndex(idx);
@@ -344,7 +465,7 @@ export default function SupermarketSimulation() {
           if (c.backend?.session?.id) {
             await api.cancelSession(c.backend.session.id).catch(() => {});
           }
-          await simApi.connection(c.cart_id, true).catch(() => {});
+          await simApi.connection(c.cart_id, false).catch(() => {});
           await simApi.weightOffset(c.cart_id, 0).catch(() => {});
           await simApi.battery(c.cart_id, 100).catch(() => {});
           if (c.backend?.cart_status === 'LOCKED') {
@@ -353,7 +474,7 @@ export default function SupermarketSimulation() {
         }),
       );
     }
-    toast('ok', 'Đã đặt lại trạng thái mô phỏng 2D và toàn bộ xe về Lối vào', { scope: 'admin' });
+    toast('ok', 'Đã đặt lại mô phỏng: toàn bộ xe về Bãi xe và ở trạng thái OFFLINE', { scope: 'admin' });
   });
 
   const visualSelected = cartVisualState(currentBackend, currentSim, checkoutFlags[selectedId]);
@@ -488,11 +609,11 @@ export default function SupermarketSimulation() {
         {/* Cột trái: Danh sách đội xe */}
         <aside className="card sim2d-fleet" data-testid="fleet-panel">
           <div className="sim2d-card-head">
-            <h3>Đội xe ({mergedCarts.length})</h3>
+            <h3>Đội xe ({effectiveCarts.length})</h3>
             <span className="muted small">Chọn xe</span>
           </div>
           <div className="sim2d-fleet-list">
-            {mergedCarts.map(({ cart_id, backend, sim }) => {
+            {effectiveCarts.map(({ cart_id, backend, sim }) => {
               const vis = cartVisualState(backend, sim, checkoutFlags[cart_id]);
               const bat = backend?.battery_percent ?? sim?.battery_percent;
               const w = backend?.current_weight ?? sim?.true_weight ?? 0;
@@ -525,7 +646,7 @@ export default function SupermarketSimulation() {
                 </button>
               );
             })}
-            {mergedCarts.length === 0 && (
+            {effectiveCarts.length === 0 && (
               <div className="muted small" style={{ padding: '12px 0' }}>Chưa có xe đẩy nào được đăng ký.</div>
             )}
           </div>
@@ -535,7 +656,7 @@ export default function SupermarketSimulation() {
         <div className="card sim2d-map-card" style={{ padding: viewDimension === '3d' ? 0 : undefined, overflow: 'hidden', background: '#0f172a' }}>
           {viewDimension === '3d' ? (
             <Supermarket3D
-              carts={mergedCarts}
+              carts={effectiveCarts}
               selectedId={selectedId}
               onSelectCart={setSelectedId}
               onTargetZoneSelect={(zId) => {
@@ -547,7 +668,7 @@ export default function SupermarketSimulation() {
             />
           ) : (
             <SupermarketMap
-              cartsList={mergedCarts}
+              cartsList={effectiveCarts}
               positions={positions}
               routes={routes}
               selectedId={selectedId}
@@ -656,11 +777,18 @@ export default function SupermarketSimulation() {
                   type="button"
                   className="btn btn-small"
                   onClick={() => moveCartToZone(selectedId, targetZone)}
+                  disabled={!isCartOnline(selectedId) || Boolean(busyAction)}
+                  title={isCartOnline(selectedId) ? 'Di chuyển xe' : 'Xe đang OFFLINE tại bãi xe. Hãy bấm "Bắt đầu phiên" để kích hoạt xe trước khi di chuyển!'}
                   data-testid="btn-move-cart"
                 >
                   Di chuyển xe
                 </button>
               </div>
+              {!isCartOnline(selectedId) && (
+                <div className="small muted" style={{ marginTop: 4, color: '#f59e0b', fontSize: '0.78rem' }}>
+                  ⚠️ Xe {selectedId} đang <b>OFFLINE</b> tại bãi xe. Bấm <b>Bắt đầu phiên</b> bên dưới để bật xe và di chuyển.
+                </div>
+              )}
             </div>
 
             <div className="sim2d-ctrl-group">
@@ -714,7 +842,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'beverage' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'beverage')}
-                    title="Đến quầy Đồ uống & Sữa"
+                    disabled={!isCartOnline(selectedId)}
+                    title={isCartOnline(selectedId) ? 'Đến quầy Đồ uống & Sữa' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
                     data-testid="btn-goto-beverage"
                   >
                     🥤 Đồ uống
@@ -724,7 +853,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'grocery' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'grocery')}
-                    title="Đến quầy Thực phẩm khô"
+                    disabled={!isCartOnline(selectedId)}
+                    title={isCartOnline(selectedId) ? 'Đến quầy Thực phẩm khô' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
                     data-testid="btn-goto-grocery"
                   >
                     🍜 Thực phẩm
@@ -734,7 +864,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'household' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'household')}
-                    title="Đến quầy Gia dụng"
+                    disabled={!isCartOnline(selectedId)}
+                    title={isCartOnline(selectedId) ? 'Đến quầy Gia dụng' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
                     data-testid="btn-goto-household"
                   >
                     🧼 Gia dụng
@@ -744,7 +875,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'personal_care' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'personal_care')}
-                    title="Đến quầy Chăm sóc cá nhân"
+                    disabled={!isCartOnline(selectedId)}
+                    title={isCartOnline(selectedId) ? 'Đến quầy Chăm sóc cá nhân' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
                     data-testid="btn-goto-personal"
                   >
                     🪥 Cá nhân
