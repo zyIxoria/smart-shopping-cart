@@ -141,9 +141,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ctx.gateway.start()
         monitor.start()
         app.state.ws_port = ws.port
+        sec_mode = "SECURE (HMAC-SHA256, TLS 8883)" if settings.device_master_key else "DEVELOPMENT (Open 1883)"
         log.info(
-            "Backend sẵn sàng: http://%s:%s (DB=%s, WS=/ws trên cổng %s%s)",
+            "Backend sẵn sàng: http://%s:%s (DB=%s, MQTT=%s:%s [%s], WS=/ws trên cổng %s%s)",
             settings.host, settings.port, "postgres" if db.is_postgres else "sqlite",
+            settings.mqtt_host, settings.mqtt_port, sec_mode,
             settings.port, f" + {ws.port}" if use_standalone_ws else "",
         )
         try:

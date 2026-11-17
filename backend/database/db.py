@@ -45,7 +45,7 @@ class Database:
 
             self.dsn = dsn or "postgresql://postgres:postgres@localhost:5432/smartcart"
             try:
-                self._conn = psycopg.connect(self.dsn, autocommit=True, row_factory=dict_row)
+                self._conn = psycopg.connect(self.dsn, autocommit=True, row_factory=dict_row, connect_timeout=3)
                 log.info("Kết nối thành công PostgreSQL 16: %s", self.dsn.split("@")[-1])
             except Exception as e:
                 raise RuntimeError(
