@@ -116,6 +116,14 @@ export default function Supermarket3D({
   const raycasterRef = useRef(new THREE.Raycaster());
   const mouseRef = useRef(new THREE.Vector2());
 
+  // Giữ ref cho callbacks và selectedId để tránh lỗi stale closure khi click chuột trên Canvas 3D
+  const onSelectCartRef = useRef(onSelectCart);
+  onSelectCartRef.current = onSelectCart;
+  const onTargetZoneSelectRef = useRef(onTargetZoneSelect);
+  onTargetZoneSelectRef.current = onTargetZoneSelect;
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
+
   const [followCart, setFollowCart] = useState(false);
   const [cameraMode, setCameraMode] = useState('isometric'); // 'isometric' | 'topdown' | 'follow'
   const [dragMode, setDragMode] = useState('pan'); // 'pan' (mặc định cho phép kéo di chuyển bằng chuột trái) | 'rotate'
@@ -229,11 +237,11 @@ export default function Supermarket3D({
         let curr = hit.object;
         while (curr && curr !== scene) {
           if (curr.userData?.cartId) {
-            onSelectCart?.(curr.userData.cartId);
+            onSelectCartRef.current?.(curr.userData.cartId);
             return;
           }
           if (curr.userData?.zoneId) {
-            onTargetZoneSelect?.(curr.userData.zoneId);
+            onTargetZoneSelectRef.current?.(curr.userData.zoneId);
             return;
           }
           curr = curr.parent;
@@ -611,7 +619,7 @@ export default function Supermarket3D({
               key={z.id}
               type="button"
               className="chip-btn"
-              onClick={() => onTargetZoneSelect?.(z.id)}
+              onClick={() => onTargetZoneSelectRef.current?.(z.id)}
               data-testid={`map-zone-${z.id}`}
               style={{ padding: '3px 9px', fontSize: '0.8rem', background: '#1e293b', border: '1px solid #334155', color: '#f8fafc' }}
               title={`Điều hướng xe ${selectedId} tới ${z.label}`}
@@ -636,7 +644,7 @@ export default function Supermarket3D({
                 key={cid}
                 type="button"
                 className={`btn btn-small ${isSel ? 'btn-primary' : ''}`}
-                onClick={() => onSelectCart?.(cid)}
+                onClick={() => onSelectCartRef.current?.(cid)}
                 data-testid={`map-cart-${cid}`}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', fontSize: '0.8rem' }}
                 title={`Chọn xe ${cid} trên không gian 3D`}
@@ -771,6 +779,7 @@ function buildSupermarketEnvironment(scene) {
 
     const shelfGroup = createGondolaShelf(sw, sh, s.zone);
     shelfGroup.position.set(sx, 0, sz);
+    shelfGroup.userData = { zoneId: s.zone };
     scene.add(shelfGroup);
   });
 
@@ -783,6 +792,7 @@ function buildSupermarketEnvironment(scene) {
 
     const counterMesh = createCheckoutCounter(qw, qh, idx + 1);
     counterMesh.position.set(qx, 0, qz);
+    counterMesh.userData = { zoneId: 'checkout' };
     scene.add(counterMesh);
   });
 }

@@ -45,6 +45,8 @@ export default function SupermarketSimulation() {
 
   // Trạng thái điều khiển Digital Twin
   const [selectedId, setSelectedId] = useState('CART_001');
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
   const [targetZone, setTargetZone] = useState('beverage');
   const [selectedBarcode, setSelectedBarcode] = useState('');
   const [filterByZone, setFilterByZone] = useState(true);
@@ -84,6 +86,13 @@ export default function SupermarketSimulation() {
     if (b?.session?.id || s?.session_id) return true;
     return false;
   }, [onlineCarts, state.carts, simCarts]);
+
+  // Ràng buộc: Xe bắt buộc phải có phiên mua hàng đang hoạt động mới được phép di chuyển
+  const hasActiveSession = useCallback((cid) => {
+    const b = state.carts[cid];
+    const s = simCarts[cid];
+    return Boolean(b?.session?.id || s?.session_id);
+  }, [state.carts, simCarts]);
 
   // Danh sách xe với connection_status phản ánh đúng logic khởi động offline / phiên online
   const effectiveCarts = useMemo(() => {
@@ -180,9 +189,9 @@ export default function SupermarketSimulation() {
     return () => { cancelled = true; };
   }, [activeSessionId, currentBackend?.session?.item_count, currentBackend?.session?.total_amount]);
 
-  const moveCartToZone = useCallback((cartId, zoneId, bypassOfflineCheck = false) => {
-    if (!bypassOfflineCheck && !isCartOnline(cartId)) {
-      toast('warn', `Xe ${cartId} đang OFFLINE tại bãi giữ xe. Hãy bấm "Bắt đầu phiên" để kích hoạt xe trước khi di chuyển!`, { scope: 'admin' });
+  const moveCartToZone = useCallback((cartId, zoneId, bypassSessionCheck = false) => {
+    if (!bypassSessionCheck && !hasActiveSession(cartId)) {
+      toast('warn', `Xe ${cartId} chưa mở phiên mua hàng. Vui lòng bấm "Bắt đầu phiên" trước khi di chuyển!`, { scope: 'admin' });
       return;
     }
     const zone = zoneById(zoneId);
@@ -196,10 +205,17 @@ export default function SupermarketSimulation() {
     if (zoneId === 'entrance') {
       setCheckoutFlags((prev) => ({ ...prev, [cartId]: false }));
     }
-  }, [isCartOnline, toast]);
+  }, [hasActiveSession, toast]);
 
   const moveCartToZoneRef = useRef(moveCartToZone);
   moveCartToZoneRef.current = moveCartToZone;
+
+  // Điều hướng điểm đến: Luôn lấy chính xác cartId đang chọn từ ref để tránh lỗi stale closure khi click trong 3D
+  const handleTargetZoneSelect = useCallback((zId) => {
+    const activeId = selectedIdRef.current;
+    setTargetZone(zId);
+    moveCartToZone(activeId, zId);
+  }, [moveCartToZone]);
 
   // Xử lý chuỗi sự kiện khi xe đến điểm đích của chặng (quầy thanh toán -> lối ra -> quay về bãi xe sẵn sàng đón khách mới)
   const handleDestinationReached = useCallback((cid, arrivedZone) => {
@@ -657,10 +673,7 @@ export default function SupermarketSimulation() {
               carts={effectiveCarts}
               selectedId={selectedId}
               onSelectCart={setSelectedId}
-              onTargetZoneSelect={(zId) => {
-                setTargetZone(zId);
-                moveCartToZone(selectedId, zId);
-              }}
+              onTargetZoneSelect={handleTargetZoneSelect}
               positions={positions}
               checkoutFlags={checkoutFlags}
             />
@@ -671,10 +684,7 @@ export default function SupermarketSimulation() {
               routes={routes}
               selectedId={selectedId}
               onSelectCart={setSelectedId}
-              onSelectZone={(zId) => {
-                setTargetZone(zId);
-                moveCartToZone(selectedId, zId);
-              }}
+              onSelectZone={handleTargetZoneSelect}
               checkoutFlags={checkoutFlags}
             />
           )}
@@ -788,14 +798,29 @@ export default function SupermarketSimulation() {
                   type="button"
                   className="btn btn-small"
                   onClick={() => moveCartToZone(selectedId, targetZone)}
-                  disabled={!isCartOnline(selectedId) || Boolean(busyAction)}
-                  title={isCartOnline(selectedId) ? 'Di chuyển xe' : 'Xe đang OFFLINE tại bãi xe. Hãy bấm "Bắt đầu phiên" để kích hoạt xe trước khi di chuyển!'}
+                  disabled={!hasActiveSession(selectedId) || Boolean(busyAction)}
+                  title={hasActiveSession(selectedId) ? 'Di chuyển xe tới khu vực đã chọn' : 'Xe chưa mở phiên mua hàng. Cần bấm "Bắt đầu phiên" để bắt đầu mua sắm trước khi di chuyển!'}
                   data-testid="btn-move-cart"
                 >
                   Di chuyển xe
                 </button>
               </div>
-              {!isCartOnline(selectedId) && (
+              {!hasActiveSession(selectedId) ? (
+                <div className="small" style={{ marginTop: 6, padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: 6, color: '#f59e0b', fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                  <span>🔒 Xe {selectedId} <b>chưa mở phiên mua hàng</b>. Cần bấm <b>Bắt đầu phiên</b> bên dưới thì xe mới được di chuyển.</span>
+                  {writable && (
+                    <button
+                      type="button"
+                      className="btn btn-small btn-primary"
+                      style={{ padding: '2px 8px', fontSize: '0.74rem' }}
+                      onClick={handleStartSession}
+                      disabled={Boolean(busyAction)}
+                    >
+                      ▶️ Bắt đầu phiên ngay
+                    </button>
+                  )}
+                </div>
+              ) : !isCartOnline(selectedId) ? (
                 <div className="small" style={{ marginTop: 6, padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: 6, color: '#f59e0b', fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
                   <span>⚠️ Xe {selectedId} đang <b>OFFLINE</b> tại bãi xe. Bấm <b>Bắt đầu phiên</b> hoặc kết nối lại để sử dụng.</span>
                   {writable && (
@@ -812,7 +837,7 @@ export default function SupermarketSimulation() {
                     </button>
                   )}
                 </div>
-              )}
+              ) : null}
             </div>
 
             <div className="sim2d-ctrl-group">
@@ -866,8 +891,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'beverage' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'beverage')}
-                    disabled={!isCartOnline(selectedId)}
-                    title={isCartOnline(selectedId) ? 'Đến quầy Đồ uống & Sữa' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
+                    disabled={!hasActiveSession(selectedId)}
+                    title={hasActiveSession(selectedId) ? 'Đến quầy Đồ uống & Sữa' : 'Xe chưa mở phiên mua hàng. Cần bấm "Bắt đầu phiên" trước!'}
                     data-testid="btn-goto-beverage"
                   >
                     🥤 Đồ uống
@@ -877,8 +902,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'grocery' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'grocery')}
-                    disabled={!isCartOnline(selectedId)}
-                    title={isCartOnline(selectedId) ? 'Đến quầy Thực phẩm khô' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
+                    disabled={!hasActiveSession(selectedId)}
+                    title={hasActiveSession(selectedId) ? 'Đến quầy Thực phẩm khô' : 'Xe chưa mở phiên mua hàng. Cần bấm "Bắt đầu phiên" trước!'}
                     data-testid="btn-goto-grocery"
                   >
                     🍜 Thực phẩm
@@ -888,8 +913,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'household' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'household')}
-                    disabled={!isCartOnline(selectedId)}
-                    title={isCartOnline(selectedId) ? 'Đến quầy Gia dụng' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
+                    disabled={!hasActiveSession(selectedId)}
+                    title={hasActiveSession(selectedId) ? 'Đến quầy Gia dụng' : 'Xe chưa mở phiên mua hàng. Cần bấm "Bắt đầu phiên" trước!'}
                     data-testid="btn-goto-household"
                   >
                     🧼 Gia dụng
@@ -899,8 +924,8 @@ export default function SupermarketSimulation() {
                     className={`btn btn-small ${activeZone === 'personal_care' ? 'btn-primary' : ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 7px' }}
                     onClick={() => moveCartToZone(selectedId, 'personal_care')}
-                    disabled={!isCartOnline(selectedId)}
-                    title={isCartOnline(selectedId) ? 'Đến quầy Chăm sóc cá nhân' : 'Xe đang OFFLINE. Cần bắt đầu phiên trước!'}
+                    disabled={!hasActiveSession(selectedId)}
+                    title={hasActiveSession(selectedId) ? 'Đến quầy Chăm sóc cá nhân' : 'Xe chưa mở phiên mua hàng. Cần bấm "Bắt đầu phiên" trước!'}
                     data-testid="btn-goto-personal"
                   >
                     🪥 Cá nhân
